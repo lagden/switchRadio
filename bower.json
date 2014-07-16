@@ -17,7 +17,7 @@
         "node_modules",
         "examples",
         "src",
-        "lib"
+        "lib",
         "package.json",
         "Gulpfile.js",
         "*.coffee",
