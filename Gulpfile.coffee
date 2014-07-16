@@ -5,6 +5,7 @@ sass   = require 'gulp-ruby-sass'
 prefix = require 'gulp-autoprefixer'
 jade   = require 'gulp-jade'
 coffee = require 'gulp-coffee'
+uglify = require 'gulp-uglifyjs'
 filter = require 'gulp-filter'
 util   = require 'gulp-util'
 
@@ -23,48 +24,76 @@ AUTOPREFIXER_BROWSERS = [
   'bb >= 10'
 ]
 
-gulp.task 'css', ->
-  gulp.src '*.sass'
-    .pipe sass {
-      sourcemap: true
-      sourcemapPath: './'
-    }
-    .pipe prefix AUTOPREFIXER_BROWSERS
-    .pipe gulp.dest 'dist/'
+sources =
+  sass   : './src/*.sass'
+  jade   : './src/examples/*.jade'
+  coffee : './src/*.coffee'
+  js     : [
+    './lib/vendor/get-style-property/get-style-property.js'
+    './lib/vendor/hammerjs/hammer.js'
+    './switch.js'
+  ]
+
+destinations =
+  sass     : './'
+  jade     : './examples/'
+  coffee   : './'
+  js       : './'
+  prefixer : './'
+
+gulp.task 'sass', ->
+  gulp.src sources.sass
+    .pipe sass
+      trace         : true
+      sourcemap     : true
+      sourcemapPath : '../'
+      style         : 'compressed'
+      noCache       : true
+    .pipe prefix AUTOPREFIXER_BROWSERS,
+      map: false
+    .pipe gulp.dest destinations.sass
     .pipe filter '*.css'
     .pipe reload {stream: true}
   return
 
-gulp.task 'html', ->
-  gulp.src 'examples/*.jade'
-    .pipe jade {
-        pretty: true
-      }
-    .pipe gulp.dest 'examples/'
-    .pipe reload {stream: true}
+gulp.task 'jade', ->
+  gulp.src sources.jade
+    .pipe jade
+      pretty: false
+    .pipe gulp.dest destinations.jade
+    .pipe reload
+      stream: true
   return
 
 gulp.task 'coffee', ->
-  gulp.src ['*.coffee', '!Gulpfile.coffee']
+  gulp.src sources.coffee
     .pipe coffee(bare: true).on 'error', util.log
-    .pipe gulp.dest 'dist/'
-    .pipe reload {stream: true}
+    .pipe gulp.dest destinations.coffee
+    .pipe reload
+      stream: true
   return
 
-gulp.task 'server', ['default'], ->
-  browserSync {
+gulp.task 'uglify', ->
+  gulp.src sources.js
+    .pipe uglify 'switch.pkg.min.js',
+      outSourceMap: true
+    .pipe gulp.dest destinations.js
+  return
+
+gulp.task 'server', ['default', 'watch'], ->
+  browserSync
     notify: false
     port: 8182
-    server: {
-      baseDir: ['examples', 'dist']
-    }
-  }
+    server:
+      baseDir: [
+        'examples', './'
+      ]
   return
 
 gulp.task 'watch', ->
-  gulp.watch '*.sass', ['css']
-  gulp.watch 'examples/*.jade', ['html']
-  gulp.watch '*.coffee', ['coffee']
+  gulp.watch sources.sass, ['sass']
+  gulp.watch sources.jade, ['jade']
+  gulp.watch sources.coffee, ['coffee', 'uglify']
   return
 
-gulp.task 'default', ['css', 'html', 'coffee', 'watch']
+gulp.task 'default', ['sass', 'jade', 'coffee', 'uglify']

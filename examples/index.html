@@ -1,56 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="Example">
-    <meta name="author" content="Thiago Lagden">
-    <link rel="stylesheet" type="text/css" href="switch.css">
-    <style>
-      .label {
-          margin-bottom: 5px
-      }
-      
-      .mar-b-20 {
-          margin-bottom: 20px
-      }
-      
-    </style>
-  </head>
-  <title>Example</title>
-  <body>
-    <h1>Example</h1>
-    <form action="index.html" method="GET">
-      <div class="mar-b-20">
-        <div id="labelSexo" class="label">Qual é o sexo?</div>
-        <div class="switchRadio">
-          <label for="SexoM">Masculino</label>
-          <input id="SexoM" type="radio" title="Masculino" name="sexo" value="M">
-          <label for="SexoF">Feminino</label>
-          <input id="SexoF" type="radio" title="Feminino" name="sexo" value="F">
-        </div>
-      </div>
-      <div class="mar-b-20">
-        <div id="labelSwitch" class="label">Você achou esse switch bacana?</div>
-        <div class="switchRadio">
-          <label for="sim">Sim</label>
-          <input id="sim" type="radio" title="Sim" name="switch" value="S" checked>
-          <label for="nao">Não</label>
-          <input id="nao" type="radio" title="Não" name="switch" value="N">
-        </div>
-      </div>
-      <button type="submit">OK</button>
-    </form>
-    <script src="lib/get-style-property/get-style-property.js"></script>
-    <script src="lib/hammerjs/hammer.js"></script>
-    <script src="switch.js"></script>
-    <script>
-      [].forEach.call(document.querySelectorAll('.switchRadio'), function(el, idx, arr) {
-          var switchRadio = new Switch(el, false, el.previousElementSibling.id);
-          var labels = el.getElementsByTagName('label');
-          switchRadio.build(labels[0].textContent, labels[1].textContent);
-      });
-    </script>
-  </body>
-</html>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf8"><meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><meta name="description" content="Example"><meta name="author" content="Thiago Lagden"><link rel="stylesheet" type="text/css" href="switch.css"><style>.label {
+    margin-bottom: 5px
+}
+
+.mar-b-20 {
+    margin-bottom: 20px
+}
+</style></head><title>Example</title><body><h1>Example</h1><form action="index.html" method="GET"><div class="mar-b-20"><div id="labelSexo" class="label">Qual é o sexo?</div><div class="switchRadio"><label for="SexoM">Masculino</label><input id="SexoM" type="radio" title="Masculino" name="sexo" value="M"><label for="SexoF">Feminino</label><input id="SexoF" type="radio" title="Feminino" name="sexo" value="F"></div></div><div class="mar-b-20"><div id="labelSwitch" class="label">Você achou esse switch bacana?</div><div class="switchRadio"><label for="sim">Sim</label><input id="sim" type="radio" title="Sim" name="switch" value="S" checked><label for="nao">Não</label><input id="nao" type="radio" title="Não" name="switch" value="N"></div></div><button type="submit">OK</button></form><script src="switch.pkg.min.js"></script><script>[].forEach.call(document.querySelectorAll('.switchRadio'), function(el, idx, arr) {
+    var switchRadio = new Switch(el, false, el.previousElementSibling.id);
+    var labels = el.getElementsByTagName('label');
+    switchRadio.build(labels[0].textContent, labels[1].textContent);
+});</script></body></html>

@@ -1,7 +1,7 @@
 {
     "name": "switch-radio",
     "description": "It is a plugin that show radios buttons like switch",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "author": "Thiago Lagden",
     "keyword": [
         "custom",
@@ -10,17 +10,20 @@
         "radio"
     ],
     "main": [
-        "./dist/switch.js",
-        "./dist/switch.css"
+        "switch.js",
+        "switch.css"
     ],
     "ignore": [
-        "examples/",
+        "node_modules",
+        "examples",
+        "src",
+        "lib"
         "package.json",
         "Gulpfile.js",
         "*.coffee",
         "*.md",
         "*.sass",
-        "**/.*"
+        ".*"
     ],
     "dependencies": {
         "hammerjs": "~2.0.1",
