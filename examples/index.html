@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Example">
+    <meta name="author" content="Thiago Lagden">
+    <link rel="stylesheet" type="text/css" href="switch.css">
+  </head>
+  <title>Example</title>
+  <body>
+    <h1>Example</h1>
+    <form action="index.html" method="GET">
+      <div>
+        <div class="switchRadio">
+          <label for="2p">2p</label>
+          <input id="2p" type="radio" title="2p" name="porta" value="2p">
+          <label for="4p">4ppppp</label>
+          <input id="4p" type="radio" title="4p" name="porta" value="4p">
+        </div>
+      </div>
+      <div>
+        <div class="switchRadio">
+          <label for="sim">Sim</label>
+          <input id="sim" type="radio" title="Sim" name="grupo" value="s">
+          <label for="nao">Não</label>
+          <input id="nao" type="radio" title="Não" name="grupo" value="n">
+        </div>
+      </div>
+      <button type="submit">OK</button>
+    </form>
+    <script src="lib/get-style-property/get-style-property.js"></script>
+    <script src="lib/hammerjs/hammer.js"></script>
+    <script src="switch.js"></script>
+    <script>
+      [].forEach.call(document.querySelectorAll('.switchRadio'), function(el, idx, arr) {
+          var switchRadio = new Switch(el);
+          var labels = el.getElementsByTagName('label');
+          switchRadio.build(labels[0].textContent, labels[1].textContent);
+      });
+    </script>
+  </body>
+</html>

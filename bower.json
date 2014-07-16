@@ -1,0 +1,22 @@
+{
+  "name": "switch",
+  "version": "0.0.1",
+  "main": [
+    "./dist/switch.js",
+    "./dist/switch.css"
+  ],
+  "ignore": [
+    "dist/",
+    "examples/",
+    "*.js",
+    "*.coffee",
+    "*.json",
+    "*.md",
+    "*.sass",
+    "**/.*"
+  ],
+  "dependencies": {
+    "hammerjs": "~2.0.1",
+    "get-style-property": "desandro/get-style-property#~1.0.3"
+  }
+}

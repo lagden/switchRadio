@@ -1,0 +1,56 @@
+.switchRadio
+    $height: 26px
+    font-family: Consolas, 'Liberation Mono', Courier, monospace
+    width: auto
+    height: $height
+    position: relative
+    display: inline-block
+    border-radius: 50em
+    overflow: hidden
+    box-shadow: rgba(0, 0, 0, 0.5) 0px 1px 1px inset, rgba(255, 255, 255, 0.2) 0px 1px 0px
+    background: rgb(51, 51, 51)
+    padding-left: 3px
+    padding-right: 3px
+
+    input[type="radio"],
+    label
+        position: relative
+        z-index: 1
+        visibility: hidden
+        position: absolute
+
+    > .switchRadio__flex
+        // Flex
+        display: flex
+        flex-direction: row
+        flex-wrap: nowrap
+        align-items: center
+        align-content: center
+
+        height: $height
+        position: relative
+        z-index: 2
+
+        user-select: none
+        transition: transform 0.2s linear
+        transform: translate3d(0, 0, 0)
+
+        &.is-dragging
+            transition: none
+
+        > .switchRadio__caption
+            pointer-events: none
+            box-sizing: border-box
+            font-size: 0.85em
+            text-align: center
+            color: white
+            padding-left: 5px
+            padding-right: 5px
+
+        > .switchRadio__knob
+            $knobSize: 20px
+            width: $knobSize
+            height: $knobSize
+            cursor: pointer
+            border-radius: 50%
+            background: linear-gradient(rgb(246, 248, 249) 0%, rgb(229, 235, 238) 50%, rgb(215, 222, 227) 51%, rgb(245, 247, 249) 100%)
