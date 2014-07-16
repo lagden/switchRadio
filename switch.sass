@@ -1,5 +1,6 @@
+$times: 2
 .switchRadio
-    $height: 26px
+    $height: 26px * $times
     font-family: Consolas, 'Liberation Mono', Courier, monospace
     width: auto
     height: $height
@@ -34,6 +35,10 @@
         user-select: none
         transition: transform 0.2s linear
         transform: translate3d(0, 0, 0)
+        &:focus
+            outline: none
+            > .switchRadio__knob
+                box-shadow: 0 0 10px white
 
         &.is-dragging
             transition: none
@@ -46,11 +51,16 @@
             color: white
             padding-left: 5px
             padding-right: 5px
+            opacity: 0
+            transition: opacity 0.8s
+            &.is-active
+                opacity: 1
 
         > .switchRadio__knob
-            $knobSize: 20px
+            $knobSize: 20px * $times
             width: $knobSize
             height: $knobSize
+            overflow: hidden
             cursor: pointer
             border-radius: 50%
             background: linear-gradient(rgb(246, 248, 249) 0%, rgb(229, 235, 238) 50%, rgb(215, 222, 227) 51%, rgb(245, 247, 249) 100%)

@@ -1,11 +1,8 @@
 {
   "volo": {
-    "url": "https://raw.githubusercontent.com/lagden/Notifications/{version}/dist/theNotification.js",
-    "dependencies": {
-      "getStyleProperty": "https://raw.githubusercontent.com/desandro/get-style-property/v1.0.3/get-style-property.js"
-    }
+    "url": "https://raw.githubusercontent.com/lagden/switchRadio/{version}/dist/switch.js",
   },
-  "main": "./dist/theNotification.js",
+  "main": "./dist/switch.js",
   "devDependencies": {
     "browser-sync": "~1.2.1",
     "coffee-script": "~1.7.1",

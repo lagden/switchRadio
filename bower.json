@@ -1,22 +1,30 @@
 {
-  "name": "switch",
-  "version": "0.0.1",
-  "main": [
-    "./dist/switch.js",
-    "./dist/switch.css"
-  ],
-  "ignore": [
-    "dist/",
-    "examples/",
-    "*.js",
-    "*.coffee",
-    "*.json",
-    "*.md",
-    "*.sass",
-    "**/.*"
-  ],
-  "dependencies": {
-    "hammerjs": "~2.0.1",
-    "get-style-property": "desandro/get-style-property#~1.0.3"
-  }
+    "name": "switch-radio",
+    "description": "It is a plugin that show radios buttons like switch",
+    "version": "0.0.1",
+    "author": "Thiago Lagden",
+    "keyword": [
+        "custom",
+        "drag",
+        "switch",
+        "radio"
+    ],
+    "main": [
+        "./dist/switch.js",
+        "./dist/switch.css"
+    ],
+    "ignore": [
+        "dist/",
+        "examples/",
+        "*.js",
+        "*.coffee",
+        "*.json",
+        "*.md",
+        "*.sass",
+        "**/.*"
+    ],
+    "dependencies": {
+        "hammerjs": "~2.0.1",
+        "get-style-property": "desandro/get-style-property#~1.0.3"
+    }
 }

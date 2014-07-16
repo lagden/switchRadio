@@ -7,23 +7,34 @@ html(lang='en')
         meta(name='description', content='Example')
         meta(name='author', content= 'Thiago Lagden')
         link(rel='stylesheet', type='text/css', href='switch.css')
+        style.
+            .label {
+                margin-bottom: 5px
+            }
+
+            .mar-b-20 {
+                margin-bottom: 20px
+            }
+
     title Example
     body
         h1 Example
         form(action='index.html', method='GET')
-            div
+            .mar-b-20
+                #labelSexo.label Qual é o sexo?
                 .switchRadio
-                    label(for='2p') 2p
-                    input#2p(type='radio', title='2p', name='porta', value='2p')
-                    label(for='4p') 4ppppp
-                    input#4p(type='radio', title='4p', name='porta', value='4p')
+                    label(for='SexoM') Masculino
+                    input#SexoM(type='radio', title='Masculino', name='sexo', value='M')
+                    label(for='SexoF') Feminino
+                    input#SexoF(type='radio', title='Feminino', name='sexo', value='F')
 
-            div
+            .mar-b-20
+                #labelSwitch.label Você achou esse switch bacana?
                 .switchRadio
                     label(for='sim') Sim
-                    input#sim(type='radio', title='Sim', name='grupo', value='s')
+                    input#sim(type='radio', title='Sim', name='switch', value='S', checked)
                     label(for='nao') Não
-                    input#nao(type='radio', title='Não', name='grupo', value='n')
+                    input#nao(type='radio', title='Não', name='switch', value='N')
 
             button(type='submit') OK
 
@@ -33,7 +44,7 @@ html(lang='en')
         script(src='switch.js')
         script.
             [].forEach.call(document.querySelectorAll('.switchRadio'), function(el, idx, arr) {
-                var switchRadio = new Switch(el);
+                var switchRadio = new Switch(el, false, el.previousElementSibling.id);
                 var labels = el.getElementsByTagName('label');
                 switchRadio.build(labels[0].textContent, labels[1].textContent);
             });

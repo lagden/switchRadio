@@ -15,27 +15,38 @@ It is a plugin that show `radios buttons` like switch
   }
 })(this, function(getStyleProperty, Hammer) {
   'use strict';
-  var Switch, getTemplate, onEnd, onMove, onTap, toggle, transformProperty;
+  var Switch, getTemplate, onEnd, onKeydown, onMove, onStart, onTap, toggle, transformProperty;
   transformProperty = getStyleProperty('transform');
   getTemplate = function() {
-    return ['<div class="switchRadio__flex">', '<div class="switchRadio__caption switchRadio__caption--on">{captionOn}</div>', '<div class="switchRadio__knob"></div>', '<div class="switchRadio__caption switchRadio__caption--off">{captionOff}</div>', '</div>'].join('');
+    return ['<div class="switchRadio__flex" tabindex="0" role="switch" aria-valueon="{valueon}" aria-valueoff="{valueoff}" aria-valuenow="{valuenow}" aria-labeledby="{labeledby}" aria-required="{required}">', '<div class="switchRadio__caption switchRadio__caption--on">{captionOn}</div>', '<div class="switchRadio__knob"></div>', '<div class="switchRadio__caption switchRadio__caption--off">{captionOff}</div>', '</div>'].join('');
   };
   toggle = function() {
-    var final;
-    final = this.side ? -this.size : 0;
-    this.sFlex.style[transformProperty] = 'translate3d(' + final + 'px, 0, 0)';
+    this.transform.translate.x = this.side ? -this.size : 0;
     this.radios[0].checked = !this.side;
-    return this.radios[1].checked = this.side;
+    this.radios[1].checked = this.side;
+    this.active = true;
+    this.captionsActive();
+    this.ariaAttr();
+    return this.requestUpdate();
+  };
+  onStart = function(event) {
+    this.sFlex.focus();
   };
   onMove = function(event) {
     var v;
-    v = this.side ? -this.size + event.deltaX : event.deltaX;
-    this.position = Math.min(0, Math.max(-this.size, v));
+    if (this.side === null) {
+      v = -this.size / 2 + event.deltaX;
+    } else {
+      v = this.side ? -this.size + event.deltaX : event.deltaX;
+    }
+    this.transform.translate.x = Math.min(0, Math.max(-this.size, v));
     this.sFlex.classList.add('is-dragging');
-    this.sFlex.style[transformProperty] = 'translate3d(' + this.position + 'px, 0, 0)';
+    this.active = true;
+    this.captionsActive();
+    this.requestUpdate();
   };
   onEnd = function(event) {
-    this.side = Math.abs(this.position) > this.size / 2;
+    this.side = Math.abs(this.transform.translate.x) > this.size / 2;
     this.sFlex.classList.remove('is-dragging');
     toggle.bind(this)();
   };
@@ -43,10 +54,28 @@ It is a plugin that show `radios buttons` like switch
     this.side = !this.side;
     return toggle.bind(this)();
   };
+  onKeydown = function(event) {
+    switch (event.keyCode) {
+      case this.keyCodes.enter:
+      case this.keyCodes.space:
+        this.side = !this.side;
+        toggle.bind(this)();
+        break;
+      case this.keyCodes.right:
+        this.side = false;
+        toggle.bind(this)();
+        break;
+      case this.keyCodes.left:
+        this.side = true;
+        toggle.bind(this)();
+    }
+  };
   Switch = (function() {
-    function Switch(container) {
+    function Switch(container, required, labeledby) {
+      labeledby = labeledby || null;
+      required = required || false;
       if (false === (this instanceof Switch)) {
-        return new Switch(container);
+        return new Switch(container, required, labeledby);
       }
       this.container = container;
       this.template = getTemplate();
@@ -62,6 +91,28 @@ It is a plugin that show `radios buttons` like switch
       if (this.radios[1].checked) {
         this.side = true;
       }
+      this.active = false;
+      this.ticking = false;
+      this.transform = {
+        translate: {
+          x: 0
+        }
+      };
+      this.aria = {
+        'aria-valueon': this.radios[0].value,
+        'aria-valueoff': this.radios[1].value,
+        'aria-valuenow': null,
+        'aria-labeledby': labeledby,
+        'aria-required': required
+      };
+      this.keyCodes = {
+        'enter': 13,
+        'space': 32,
+        'left': 37,
+        'up': 38,
+        'right': 39,
+        'down': 40
+      };
       return;
     }
 
@@ -69,7 +120,12 @@ It is a plugin that show `radios buttons` like switch
       var content, mc, pan, r, tap;
       r = {
         'captionOn': captionOn,
-        'captionOff': captionOff
+        'captionOff': captionOff,
+        'valueon': this.aria['aria-valueon'],
+        'valueoff': this.aria['aria-valueoff'],
+        'valuenow': this.aria['aria-valuenow'],
+        'labeledby': this.aria['aria-labeledby'],
+        'required': this.aria['aria-required']
       };
       content = this.template.replace(/\{(.*?)\}/g, function(a, b) {
         return r[b];
@@ -83,21 +139,59 @@ It is a plugin that show `radios buttons` like switch
       this.sOn.style.width = this.sOff.style.width = "" + this.size + "px";
       this.sFlex.style.width = (this.size * 2) + this.knob.clientWidth + 'px';
       this.container.style.width = this.size + this.knob.clientWidth + 'px';
+      this.sFlex.addEventListener('keydown', onKeydown.bind(this), false);
       pan = new Hammer.Pan({
         direction: Hammer.DIRECTION_HORIZONTAL
       });
       tap = new Hammer.Tap;
       mc = new Hammer.Manager(this.sFlex, {
-        touchAction: 'pan-x'
+        dragLockToAxis: true,
+        dragBlockHorizontal: true,
+        preventDefault: true
       });
       mc.add(tap);
       mc.add(pan);
       mc.on("tap", onTap.bind(this));
-      mc.on("panmove", onMove.bind(this));
+      mc.on("panstart", onStart.bind(this));
+      mc.on("pan", onMove.bind(this));
       mc.on("panend", onEnd.bind(this));
       mc.on("pancancel", onEnd.bind(this));
-      if (this.side !== null) {
+      if (this.side === null) {
+        this.transform.translate.x = -this.size / 2;
+        this.requestUpdate();
+      } else {
         toggle.bind(this)();
+      }
+    };
+
+    Switch.prototype.ariaAttr = function() {
+      var v;
+      if (this.side === null) {
+        v = this.side;
+      } else {
+        v = this.side ? this.radios[1].value : this.radios[0].value;
+      }
+      return this.sFlex.setAttribute('aria-valuenow', v);
+    };
+
+    Switch.prototype.captionsActive = function() {
+      var method;
+      method = this.active ? 'add' : 'remove';
+      this.sOn.classList[method]('is-active');
+      return this.sOff.classList[method]('is-active');
+    };
+
+    Switch.prototype.updateTransform = function() {
+      var value;
+      value = ['translate3d(' + this.transform.translate.x + 'px, 0, 0)'];
+      this.sFlex.style[transformProperty] = value.join(" ");
+      this.ticking = false;
+    };
+
+    Switch.prototype.requestUpdate = function() {
+      if (this.ticking === false) {
+        this.ticking = true;
+        requestAnimationFrame(this.updateTransform.bind(this));
       }
     };
 
