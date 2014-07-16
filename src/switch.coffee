@@ -36,6 +36,8 @@ It is a plugin that show `radios buttons` like switch
     @captionsActive()
     @ariaAttr()
     @requestUpdate()
+    @container.dispatchEvent @event
+    return
 
   onStart = (event) ->
     @sFlex.focus()
@@ -63,6 +65,7 @@ It is a plugin that show `radios buttons` like switch
   onTap = (event) ->
     @side = !@side
     toggle.bind(@)()
+    return
 
   onKeydown = (event) ->
     switch event.keyCode
@@ -127,6 +130,10 @@ It is a plugin that show `radios buttons` like switch
         'right' : 39
         'down'  : 40
       }
+
+      @event = new CustomEvent 'switched',
+        'detail':
+          'radios': @radios
 
       return
 

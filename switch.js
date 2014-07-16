@@ -27,7 +27,8 @@ It is a plugin that show `radios buttons` like switch
     this.active = true;
     this.captionsActive();
     this.ariaAttr();
-    return this.requestUpdate();
+    this.requestUpdate();
+    this.container.dispatchEvent(this.event);
   };
   onStart = function(event) {
     this.sFlex.focus();
@@ -52,7 +53,7 @@ It is a plugin that show `radios buttons` like switch
   };
   onTap = function(event) {
     this.side = !this.side;
-    return toggle.bind(this)();
+    toggle.bind(this)();
   };
   onKeydown = function(event) {
     switch (event.keyCode) {
@@ -113,6 +114,11 @@ It is a plugin that show `radios buttons` like switch
         'right': 39,
         'down': 40
       };
+      this.event = new CustomEvent('switched', {
+        'detail': {
+          'radios': this.radios
+        }
+      });
       return;
     }
 
