@@ -15,9 +15,9 @@
     ],
     "ignore": [
         "examples/",
+        "package.json",
         "*.js",
         "*.coffee",
-        "*.json",
         "*.md",
         "*.sass",
         "**/.*"
