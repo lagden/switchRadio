@@ -16,7 +16,7 @@
     "ignore": [
         "examples/",
         "package.json",
-        "*.js",
+        "Gulpfile.js",
         "*.coffee",
         "*.md",
         "*.sass",
