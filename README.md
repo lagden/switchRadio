@@ -25,9 +25,7 @@ It is a plugin that show `radios buttons` like switch
 
 ```javascript
 [].forEach.call(document.querySelectorAll('.switchRadio'), function(el, idx, arr) {
-    var switchRadio = require('switch')(el, false, el.previousElementSibling.id);
-    var labels = el.getElementsByTagName('label');
-    switchRadio.build(labels[0].textContent, labels[1].textContent);
+    require('switch')(el, false, el.previousElementSibling.id);
 });
 ```
 
@@ -35,9 +33,7 @@ It is a plugin that show `radios buttons` like switch
 
 ```javascript
 [].forEach.call(document.querySelectorAll('.switchRadio'), function(el, idx, arr) {
-    var switchRadio = new Switch(el, false, el.previousElementSibling.id);
-    var labels = el.getElementsByTagName('label');
-    switchRadio.build(labels[0].textContent, labels[1].textContent);
+    new Switch(el, false, el.previousElementSibling.id);
 });
 ```
 
