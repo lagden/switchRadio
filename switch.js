@@ -15,118 +15,81 @@ It is a plugin that show `radios buttons` like switch
   }
 })(this, function(getStyleProperty, Hammer) {
   'use strict';
-  var Switch, getTemplate, onEnd, onKeydown, onMove, onStart, onTap, toggle, transformProperty;
+  var Switch, transformProperty, _privados;
   transformProperty = getStyleProperty('transform');
-  getTemplate = function() {
-    return ['<div class="switchRadio__flex" tabindex="0" role="switch" aria-valueon="{valueon}" aria-valueoff="{valueoff}" aria-valuenow="{valuenow}" aria-labeledby="{labeledby}" aria-required="{required}">', '<div class="switchRadio__caption switchRadio__caption--on">{captionOn}</div>', '<div class="switchRadio__knob"></div>', '<div class="switchRadio__caption switchRadio__caption--off">{captionOff}</div>', '</div>'].join('');
-  };
-  toggle = function() {
-    var radio, _i, _len, _ref;
-    this.transform.translate.x = this.side ? -this.size : 0;
-    this.radios[0].checked = !this.side;
-    this.radios[1].checked = this.side;
-    this.active = true;
-    this.captionsActive();
-    this.ariaAttr();
-    this.requestUpdate();
-    this.container.dispatchEvent(this.eventSwitched);
-    _ref = this.radios;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      radio = _ref[_i];
-      if (radio.checked) {
-        radio.dispatchEvent(this.eventChange);
-      }
-    }
-  };
-  onStart = function(event) {
-    this.sFlex.focus();
-  };
-  onMove = function(event) {
-    var v;
-    if (this.side === null) {
-      v = -this.size / 2 + event.deltaX;
-    } else {
-      v = this.side ? -this.size + event.deltaX : event.deltaX;
-    }
-    this.transform.translate.x = Math.min(0, Math.max(-this.size, v));
-    this.sFlex.classList.add('is-dragging');
-    this.active = true;
-    this.captionsActive();
-    this.requestUpdate();
-  };
-  onEnd = function(event) {
-    this.side = Boolean(Math.abs(this.transform.translate.x) > (this.size / 2));
-    this.sFlex.classList.remove('is-dragging');
-    toggle.bind(this)();
-  };
-  onTap = function(event) {
-    this.side = !this.side;
-    toggle.bind(this)();
-  };
-  onKeydown = function(event) {
-    switch (event.keyCode) {
-      case this.keyCodes.enter:
-      case this.keyCodes.space:
-        this.side = !this.side;
-        toggle.bind(this)();
-        break;
-      case this.keyCodes.right:
-        this.side = false;
-        toggle.bind(this)();
-        break;
-      case this.keyCodes.left:
-        this.side = true;
-        toggle.bind(this)();
-    }
-  };
-  Switch = (function() {
-    function Switch(container, required, labeledby) {
-      labeledby = labeledby || null;
-      required = required || false;
-      if (false === (this instanceof Switch)) {
-        return new Switch(container, required, labeledby);
-      }
-      this.container = container;
-      this.template = getTemplate();
-      this.size = 0;
-      this.side = null;
-      this.radios = [];
-      [].forEach.call(this.container.querySelectorAll('input[type=radio]'), (function(el, idx, arr) {
-        this.radios.push(el);
-      }).bind(this));
-      if (this.radios[0].checked) {
-        this.side = false;
-      }
-      if (this.radios[1].checked) {
-        this.side = true;
-      }
-      this.active = false;
-      this.ticking = false;
-      this.transform = {
-        translate: {
-          x: 0
+  _privados = {
+    getTemplate: function() {
+      return ['<div class="switchRadio__flex" tabindex="0" role="switch" aria-valueon="{valueon}" aria-valueoff="{valueoff}" aria-valuenow="{valuenow}" aria-labeledby="{labeledby}" aria-required="{required}">', '<div class="switchRadio__caption switchRadio__caption--on">{captionOn}</div>', '<div class="switchRadio__knob"></div>', '<div class="switchRadio__caption switchRadio__caption--off">{captionOff}</div>', '</div>'].join('');
+    },
+    toggle: function() {
+      var radio, _i, _len, _ref;
+      this.transform.translate.x = this.side ? -this.size : 0;
+      this.radios[0].checked = !this.side;
+      this.radios[1].checked = this.side;
+      this.active = true;
+      this.captionsActive();
+      this.ariaAttr();
+      this.requestUpdate();
+      this.container.dispatchEvent(this.eventSwitched);
+      _ref = this.radios;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        radio = _ref[_i];
+        if (radio.checked) {
+          radio.dispatchEvent(this.eventChange);
         }
-      };
-      this.aria = {
-        'aria-valueon': this.radios[0].value,
-        'aria-valueoff': this.radios[1].value,
-        'aria-valuenow': null,
-        'aria-labeledby': labeledby,
-        'aria-required': required
-      };
-      this.keyCodes = {
-        'enter': 13,
-        'space': 32,
-        'left': 37,
-        'up': 38,
-        'right': 39,
-        'down': 40
-      };
-      return;
-    }
-
-    Switch.prototype.build = function(captionOn, captionOff) {
-      var content, mc, pan, r, sizes, tap;
+      }
+    },
+    onStart: function(event) {
+      this.sFlex.focus();
+    },
+    onMove: function(event) {
+      var v;
+      if (this.side === null) {
+        v = -this.size / 2 + event.deltaX;
+      } else {
+        v = this.side ? -this.size + event.deltaX : event.deltaX;
+      }
+      this.transform.translate.x = Math.min(0, Math.max(-this.size, v));
+      this.sFlex.classList.add('is-dragging');
+      this.active = true;
+      this.captionsActive();
+      this.requestUpdate();
+    },
+    onEnd: function(event) {
+      this.side = Boolean(Math.abs(this.transform.translate.x) > (this.size / 2));
+      this.sFlex.classList.remove('is-dragging');
+      _privados.toggle.bind(this)();
+    },
+    onTap: function(event) {
+      this.side = !this.side;
+      _privados.toggle.bind(this)();
+    },
+    onKeydown: function(event) {
+      switch (event.keyCode) {
+        case this.keyCodes.enter:
+        case this.keyCodes.space:
+          this.side = !this.side;
+          _privados.toggle.bind(this)();
+          break;
+        case this.keyCodes.right:
+          this.side = false;
+          _privados.toggle.bind(this)();
+          break;
+        case this.keyCodes.left:
+          this.side = true;
+          _privados.toggle.bind(this)();
+      }
+    },
+    build: function() {
+      var captionOff, captionOn, content, labels, mc, pan, r, sizes, tap;
+      captionOn = captionOff = '';
+      labels = this.container.getElementsByTagName('label');
+      if (labels.length === 2) {
+        captionOn = labels[0].textContent;
+        captionOff = labels[1].textContent;
+      } else {
+        console.warn('✖ No labels');
+      }
       r = {
         'captionOn': captionOn,
         'captionOff': captionOff,
@@ -160,12 +123,12 @@ It is a plugin that show `radios buttons` like switch
       });
       mc.add(tap);
       mc.add(pan);
-      mc.on('tap', onTap.bind(this));
-      mc.on('panstart', onStart.bind(this));
-      mc.on('pan', onMove.bind(this));
-      mc.on('panend', onEnd.bind(this));
-      mc.on('pancancel', onEnd.bind(this));
-      this.sFlex.addEventListener('keydown', onKeydown.bind(this), false);
+      mc.on('tap', _privados.onTap.bind(this));
+      mc.on('panstart', _privados.onStart.bind(this));
+      mc.on('pan', _privados.onMove.bind(this));
+      mc.on('panend', _privados.onEnd.bind(this));
+      mc.on('pancancel', _privados.onEnd.bind(this));
+      this.sFlex.addEventListener('keydown', _privados.onKeydown.bind(this, false));
       this.eventSwitched = new CustomEvent('switched', {
         'detail': {
           'radios': this.radios,
@@ -177,9 +140,85 @@ It is a plugin that show `radios buttons` like switch
         this.transform.translate.x = -this.size / 2;
         this.requestUpdate();
       } else {
-        toggle.bind(this)();
+        _privados.toggle.bind(this)();
       }
-    };
+    },
+    initCheck: function(container) {
+      var attrib, attribs, data, regex, _i, _len;
+      regex = /data-switcher-(\d+)/i;
+      attribs = container.attributes;
+      for (_i = 0, _len = attribs.length; _i < _len; _i++) {
+        attrib = attribs[_i];
+        if (regex.test(attrib.name)) {
+          data = attrib.name;
+        }
+      }
+      if (!!data) {
+        return true;
+      }
+    }
+  };
+  Switch = (function() {
+    function Switch(container, required, labeledby) {
+      var radio, radios, _i, _len;
+      labeledby = labeledby || null;
+      required = required || false;
+      if (_privados.initCheck(container)) {
+        console.warn('The component has been initialized.');
+        return null;
+      } else {
+        container.setAttribute('data-switcher-' + new Date().getTime(), '');
+      }
+      if (false === (this instanceof Switch)) {
+        return new Switch(container, required, labeledby);
+      }
+      this.container = container;
+      this.radios = [];
+      radios = this.container.getElementsByTagName('input');
+      for (_i = 0, _len = radios.length; _i < _len; _i++) {
+        radio = radios[_i];
+        if (radio.type === 'radio') {
+          this.radios.push(radio);
+        }
+      }
+      if (this.radios.length !== 2) {
+        console.err('✖ No radios');
+        return null;
+      }
+      this.template = _privados.getTemplate();
+      this.size = 0;
+      this.side = null;
+      if (this.radios[0].checked) {
+        this.side = false;
+      }
+      if (this.radios[1].checked) {
+        this.side = true;
+      }
+      this.active = false;
+      this.ticking = false;
+      this.transform = {
+        translate: {
+          x: 0
+        }
+      };
+      this.aria = {
+        'aria-valueon': this.radios[0].value,
+        'aria-valueoff': this.radios[1].value,
+        'aria-valuenow': null,
+        'aria-labeledby': labeledby,
+        'aria-required': required
+      };
+      this.keyCodes = {
+        'enter': 13,
+        'space': 32,
+        'left': 37,
+        'up': 38,
+        'right': 39,
+        'down': 40
+      };
+      _privados.build.bind(this)();
+      return;
+    }
 
     Switch.prototype.getSizes = function() {
       var clone, knob, sOff, sOn, sizes;

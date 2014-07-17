@@ -44,3 +44,7 @@ It is a plugin that show `radios buttons` like switch
 ### Author
 
 [Thiago Lagden](http://lagden.in)
+
+### Contributors
+
+- [Felquis Gimenes](https://github.com/felquis)

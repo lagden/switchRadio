@@ -20,70 +20,153 @@ It is a plugin that show `radios buttons` like switch
   transformProperty = getStyleProperty 'transform'
 
   # Template
-  getTemplate = ->
-    [
-      '<div class="switchRadio__flex" tabindex="0" role="switch" aria-valueon="{valueon}" aria-valueoff="{valueoff}" aria-valuenow="{valuenow}" aria-labeledby="{labeledby}" aria-required="{required}">'
-      '<div class="switchRadio__caption switchRadio__caption--on">{captionOn}</div>'
-      '<div class="switchRadio__knob"></div>'
-      '<div class="switchRadio__caption switchRadio__caption--off">{captionOff}</div>'
-      '</div>'
-    ].join ''
+  _privados =
+      getTemplate: ->
+        [
+          '<div class="switchRadio__flex" tabindex="0" role="switch" aria-valueon="{valueon}" aria-valueoff="{valueoff}" aria-valuenow="{valuenow}" aria-labeledby="{labeledby}" aria-required="{required}">'
+          '<div class="switchRadio__caption switchRadio__caption--on">{captionOn}</div>'
+          '<div class="switchRadio__knob"></div>'
+          '<div class="switchRadio__caption switchRadio__caption--off">{captionOff}</div>'
+          '</div>'
+        ].join ''
 
-  # Event Handlers
-  toggle = ->
-    @transform.translate.x = if @side then -@size else 0
-    @radios[0].checked = !@side
-    @radios[1].checked = @side
-    @active = true
-    @captionsActive()
-    @ariaAttr()
-    @requestUpdate()
-    @container.dispatchEvent @eventSwitched
-    radio.dispatchEvent @eventChange for radio in @radios when radio.checked
-    return
+      # Event Handlers
+      toggle: ->
+        @transform.translate.x = if @side then -@size else 0
+        @radios[0].checked = !@side
+        @radios[1].checked = @side
+        @active = true
+        @captionsActive()
+        @ariaAttr()
+        @requestUpdate()
+        @container.dispatchEvent @eventSwitched
+        radio.dispatchEvent @eventChange for radio in @radios when radio.checked
+        return
 
-  onStart = (event) ->
-    @sFlex.focus()
-    return
+      onStart: (event) ->
+        @sFlex.focus()
+        return
 
-  onMove = (event) ->
-    if @side == null
-      v = -@size/2 + event.deltaX
-    else
-      v = if @side then -@size + event.deltaX else event.deltaX
+      onMove: (event) ->
+        if @side == null
+          v = -@size/2 + event.deltaX
+        else
+          v = if @side then -@size + event.deltaX else event.deltaX
 
-    @transform.translate.x = Math.min 0, Math.max -@size, v
-    @sFlex.classList.add 'is-dragging'
-    @active = true
-    @captionsActive()
-    @requestUpdate()
-    return
+        @transform.translate.x = Math.min 0, Math.max -@size, v
+        @sFlex.classList.add 'is-dragging'
+        @active = true
+        @captionsActive()
+        @requestUpdate()
+        return
 
-  onEnd = (event) ->
-    @side = Boolean Math.abs(@transform.translate.x) > (@size / 2)
-    @sFlex.classList.remove 'is-dragging'
-    toggle.bind(@)()
-    return
+      onEnd: (event) ->
+        @side = Boolean Math.abs(@transform.translate.x) > (@size / 2)
+        @sFlex.classList.remove 'is-dragging'
+        _privados.toggle.bind(@)()
+        return
 
-  onTap = (event) ->
-    @side = !@side
-    toggle.bind(@)()
-    return
-
-  onKeydown = (event) ->
-    switch event.keyCode
-      when @keyCodes.enter, @keyCodes.space
+      onTap: (event) ->
         @side = !@side
-        toggle.bind(@)()
+        _privados.toggle.bind(@)()
+        return
 
-      when @keyCodes.right
-        @side = false
-        toggle.bind(@)()
+      onKeydown: (event) ->
+        switch event.keyCode
+          when @keyCodes.enter, @keyCodes.space
+            @side = !@side
+            _privados.toggle.bind(@)()
 
-      when @keyCodes.left
-        @side = true
-        toggle.bind(@)()
-    return
+          when @keyCodes.right
+            @side = false
+            _privados.toggle.bind(@)()
+
+          when @keyCodes.left
+            @side = true
+            _privados.toggle.bind(@)()
+        return
+
+      build: () ->
+        captionOn = captionOff = ''
+
+        labels = @container.getElementsByTagName 'label'
+        if labels.length == 2
+          captionOn  = labels[0].textContent
+          captionOff = labels[1].textContent
+        else
+          console.warn '✖ No labels'
+
+        # Template Render
+        r =
+          'captionOn'  : captionOn
+          'captionOff' : captionOff
+          'valueon'    : @aria['aria-valueon']
+          'valueoff'   : @aria['aria-valueoff']
+          'valuenow'   : @aria['aria-valuenow']
+          'labeledby'  : @aria['aria-labeledby']
+          'required'   : @aria['aria-required']
+
+        content = @template.replace /\{(.*?)\}/g, (a, b) ->
+          return r[b]
+
+        @container.insertAdjacentHTML 'afterbegin', content
+
+        # Size elements
+        @sFlex = @container.querySelector '.switchRadio__flex'
+        @sOn   = @container.querySelector '.switchRadio__flex > .switchRadio__caption--on'
+        @sOff  = @container.querySelector '.switchRadio__flex > .switchRadio__caption--off'
+        @knob  = @container.querySelector '.switchRadio__flex > .switchRadio__knob'
+
+        sizes = @getSizes()
+
+        @size = Math.max sizes.sOn, sizes.sOff
+
+        @sOn.style.width = @sOff.style.width = "#{@size}px"
+        @sFlex.style.width = (@size * 2) + sizes.knob + 'px'
+        @container.style.width = @size + sizes.knob + 'px'
+
+        # Drag
+        pan = new Hammer.Pan direction: Hammer.DIRECTION_HORIZONTAL
+        tap = new Hammer.Tap
+
+        mc = new Hammer.Manager @sFlex,
+          dragLockToAxis: true
+          dragBlockHorizontal: true
+          preventDefault: true
+
+        mc.add tap
+        mc.add pan
+        mc.on 'tap'       , _privados.onTap.bind @
+        mc.on 'panstart'  , _privados.onStart.bind @
+        mc.on 'pan'       , _privados.onMove.bind @
+        mc.on 'panend'    , _privados.onEnd.bind @
+        mc.on 'pancancel' , _privados.onEnd.bind @
+
+        # Keyboard
+        @sFlex.addEventListener 'keydown', _privados.onKeydown.bind @, false
+
+        # Custom events
+        @eventSwitched = new CustomEvent 'switched',
+          'detail':
+            'radios': @radios
+            'handler': @sFlex
+
+        @eventChange = new CustomEvent 'change'
+
+        # Init
+        if @side == null
+          @transform.translate.x = -@size / 2
+          @requestUpdate()
+        else
+          _privados.toggle.bind(@)()
+
+        return
+
+      initCheck: (container) ->
+        regex = /data-switcher-(\d+)/i
+        attribs = container.attributes
+        data = attrib.name for attrib in attribs when regex.test attrib.name
+        return true if !!data
 
   # Master
   class Switch
@@ -91,24 +174,37 @@ It is a plugin that show `radios buttons` like switch
       labeledby = labeledby || null
       required = required || false
 
+      # Check if component was initialized
+      if _privados.initCheck container
+        console.warn 'The component has been initialized.'
+        return null
+      else
+        container.setAttribute 'data-switcher-' + new Date().getTime(), ''
+
+      # Self instance
       return new Switch(container, required, labeledby) if false is (@ instanceof Switch)
 
+      # Container
       @container = container
-      @template = getTemplate()
-      @size = 0
-      @side = null
-      @radios = []
-      [].forEach.call @container.querySelectorAll('input[type=radio]'), (
-        (el, idx, arr) ->
-          @radios.push el
-          return
-        ).bind @
 
+      # Radios
+      @radios = []
+      radios = @container.getElementsByTagName 'input'
+      @radios.push radio for radio in radios when radio.type == 'radio'
+      if @radios.length != 2
+        console.err '✖ No radios'
+        return null
+
+      @template = _privados.getTemplate()
+      @size = 0
+
+      @side = null
       @side = false if @radios[0].checked
       @side = true if @radios[1].checked
 
       @active = false
 
+      # Animation
       @ticking = false
       @transform =
         translate:
@@ -129,72 +225,7 @@ It is a plugin that show `radios buttons` like switch
         'right' : 39
         'down'  : 40
 
-      return
-
-    build: (captionOn, captionOff) ->
-      # Template Render
-      r =
-        'captionOn'  : captionOn
-        'captionOff' : captionOff
-        'valueon'    : @aria['aria-valueon']
-        'valueoff'   : @aria['aria-valueoff']
-        'valuenow'   : @aria['aria-valuenow']
-        'labeledby'  : @aria['aria-labeledby']
-        'required'   : @aria['aria-required']
-
-      content = @template.replace /\{(.*?)\}/g, (a, b) ->
-        return r[b]
-
-      @container.insertAdjacentHTML 'afterbegin', content
-
-      # Size elements
-      @sFlex = @container.querySelector '.switchRadio__flex'
-      @sOn   = @container.querySelector '.switchRadio__flex > .switchRadio__caption--on'
-      @sOff  = @container.querySelector '.switchRadio__flex > .switchRadio__caption--off'
-      @knob  = @container.querySelector '.switchRadio__flex > .switchRadio__knob'
-
-      sizes = @getSizes()
-
-      @size = Math.max sizes.sOn, sizes.sOff
-
-      @sOn.style.width = @sOff.style.width = "#{@size}px"
-      @sFlex.style.width = (@size * 2) + sizes.knob + 'px'
-      @container.style.width = @size + sizes.knob + 'px'
-
-      # Drag
-      pan = new Hammer.Pan direction: Hammer.DIRECTION_HORIZONTAL
-      tap = new Hammer.Tap
-
-      mc = new Hammer.Manager @sFlex,
-        dragLockToAxis: true
-        dragBlockHorizontal: true
-        preventDefault: true
-
-      mc.add tap
-      mc.add pan
-      mc.on 'tap', onTap.bind @
-      mc.on 'panstart', onStart.bind @
-      mc.on 'pan', onMove.bind @
-      mc.on 'panend', onEnd.bind @
-      mc.on 'pancancel', onEnd.bind @
-
-      # Keyboard
-      @sFlex.addEventListener 'keydown', onKeydown.bind(@), false
-
-      # Custom events
-      @eventSwitched = new CustomEvent 'switched',
-        'detail':
-          'radios': @radios
-          'handler': @sFlex
-
-      @eventChange = new CustomEvent 'change'
-
-      # Init
-      if @side == null
-        @transform.translate.x = -@size / 2
-        @requestUpdate()
-      else
-        toggle.bind(@)()
+      _privados.build.bind(@)()
 
       return
 
