@@ -37,10 +37,10 @@ It is a plugin that show `radios buttons` like switch
 });
 ```
 
-### Author
+## Author
 
 [Thiago Lagden](http://lagden.in)
 
-### Contributors
+## Contributors
 
 - [Felquis Gimenes](https://github.com/felquis)
