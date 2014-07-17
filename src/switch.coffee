@@ -157,11 +157,13 @@ It is a plugin that show `radios buttons` like switch
       @sOff  = @container.querySelector '.switchRadio__flex > .switchRadio__caption--off'
       @knob  = @container.querySelector '.switchRadio__flex > .switchRadio__knob'
 
-      @size = Math.max @sOn.clientWidth, @sOff.clientWidth
+      sizes = @getSizes()
+
+      @size = Math.max sizes.sOn, sizes.sOff
 
       @sOn.style.width = @sOff.style.width = "#{@size}px"
-      @sFlex.style.width = (@size * 2) + @knob.clientWidth + 'px'
-      @container.style.width = @size + @knob.clientWidth + 'px'
+      @sFlex.style.width = (@size * 2) + sizes.knob + 'px'
+      @container.style.width = @size + sizes.knob + 'px'
 
       @sFlex.addEventListener 'keydown', onKeydown.bind(@), false
 
@@ -188,6 +190,22 @@ It is a plugin that show `radios buttons` like switch
         toggle.bind(@)()
 
       return
+
+    getSizes: ->
+      clone = @container.cloneNode true
+      clone.style.visibility = 'hidden'
+      clone.style.position = 'absolute'
+      # console.log(root)
+      document.body.appendChild clone
+      sOn   = clone.querySelector '.switchRadio__flex > .switchRadio__caption--on'
+      sOff  = clone.querySelector '.switchRadio__flex > .switchRadio__caption--off'
+      knob  = clone.querySelector '.switchRadio__flex > .switchRadio__knob'
+      sizes =
+        'sOn': sOn.clientWidth
+        'sOff': sOff.clientWidth
+        'knob': knob.clientWidth
+      clone.remove()
+      return sizes
 
     ariaAttr: ->
       if @side == null

@@ -123,7 +123,7 @@ It is a plugin that show `radios buttons` like switch
     }
 
     Switch.prototype.build = function(captionOn, captionOff) {
-      var content, mc, pan, r, tap;
+      var content, mc, pan, r, sizes, tap;
       r = {
         'captionOn': captionOn,
         'captionOff': captionOff,
@@ -141,10 +141,11 @@ It is a plugin that show `radios buttons` like switch
       this.sOn = this.container.querySelector('.switchRadio__flex > .switchRadio__caption--on');
       this.sOff = this.container.querySelector('.switchRadio__flex > .switchRadio__caption--off');
       this.knob = this.container.querySelector('.switchRadio__flex > .switchRadio__knob');
-      this.size = Math.max(this.sOn.clientWidth, this.sOff.clientWidth);
+      sizes = this.getSizes();
+      this.size = Math.max(sizes.sOn, sizes.sOff);
       this.sOn.style.width = this.sOff.style.width = "" + this.size + "px";
-      this.sFlex.style.width = (this.size * 2) + this.knob.clientWidth + 'px';
-      this.container.style.width = this.size + this.knob.clientWidth + 'px';
+      this.sFlex.style.width = (this.size * 2) + sizes.knob + 'px';
+      this.container.style.width = this.size + sizes.knob + 'px';
       this.sFlex.addEventListener('keydown', onKeydown.bind(this), false);
       pan = new Hammer.Pan({
         direction: Hammer.DIRECTION_HORIZONTAL
@@ -168,6 +169,24 @@ It is a plugin that show `radios buttons` like switch
       } else {
         toggle.bind(this)();
       }
+    };
+
+    Switch.prototype.getSizes = function() {
+      var clone, knob, sOff, sOn, sizes;
+      clone = this.container.cloneNode(true);
+      clone.style.visibility = 'hidden';
+      clone.style.position = 'absolute';
+      document.body.appendChild(clone);
+      sOn = clone.querySelector('.switchRadio__flex > .switchRadio__caption--on');
+      sOff = clone.querySelector('.switchRadio__flex > .switchRadio__caption--off');
+      knob = clone.querySelector('.switchRadio__flex > .switchRadio__knob');
+      sizes = {
+        'sOn': sOn.clientWidth,
+        'sOff': sOff.clientWidth,
+        'knob': knob.clientWidth
+      };
+      clone.remove();
+      return sizes;
     };
 
     Switch.prototype.ariaAttr = function() {
