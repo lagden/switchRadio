@@ -181,9 +181,6 @@ It is a plugin that show `radios buttons` like switch
       else
         container.setAttribute 'data-switcher-' + new Date().getTime(), ''
 
-      # Self instance
-      return new Switch(container, required, labeledby) if false is (@ instanceof Switch)
-
       # Container
       @container = container
 

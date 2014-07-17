@@ -24,8 +24,9 @@ It is a plugin that show `radios buttons` like switch
 **RequireJS**
 
 ```javascript
+var Switch = require('switch-radio/switch');
 [].forEach.call(document.querySelectorAll('.switchRadio'), function(el, idx, arr) {
-    require('switch')(el, false, el.previousElementSibling.id);
+    new Switch(el, false, el.previousElementSibling.id);
 });
 ```
 
