@@ -46,11 +46,7 @@ html(lang='en')
                 var labels = el.getElementsByTagName('label');
                 switchRadio.build(labels[0].textContent, labels[1].textContent);
                 el.addEventListener('switched', function(event) {
-                    var r = event.detail.radios;
-                    for (var i = 0, len = r.length; i < len; i++) {
-                        if(r[i].checked)
-                            r[i].dispatchEvent(eventChange);
-                    }
+                    console.log(event.detail);
                 });
 
                 [].forEach.call(el.querySelectorAll('input[type=radio]'), function(radio) {

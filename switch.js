@@ -21,6 +21,7 @@ It is a plugin that show `radios buttons` like switch
     return ['<div class="switchRadio__flex" tabindex="0" role="switch" aria-valueon="{valueon}" aria-valueoff="{valueoff}" aria-valuenow="{valuenow}" aria-labeledby="{labeledby}" aria-required="{required}">', '<div class="switchRadio__caption switchRadio__caption--on">{captionOn}</div>', '<div class="switchRadio__knob"></div>', '<div class="switchRadio__caption switchRadio__caption--off">{captionOff}</div>', '</div>'].join('');
   };
   toggle = function() {
+    var radio, _i, _len, _ref;
     this.transform.translate.x = this.side ? -this.size : 0;
     this.radios[0].checked = !this.side;
     this.radios[1].checked = this.side;
@@ -28,7 +29,14 @@ It is a plugin that show `radios buttons` like switch
     this.captionsActive();
     this.ariaAttr();
     this.requestUpdate();
-    this.container.dispatchEvent(this.event);
+    this.container.dispatchEvent(this.eventSwitched);
+    _ref = this.radios;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      radio = _ref[_i];
+      if (radio.checked) {
+        radio.dispatchEvent(this.eventChange);
+      }
+    }
   };
   onStart = function(event) {
     this.sFlex.focus();
@@ -47,7 +55,7 @@ It is a plugin that show `radios buttons` like switch
     this.requestUpdate();
   };
   onEnd = function(event) {
-    this.side = Math.abs(this.transform.translate.x) > this.size / 2;
+    this.side = Boolean(Math.abs(this.transform.translate.x) > (this.size / 2));
     this.sFlex.classList.remove('is-dragging');
     toggle.bind(this)();
   };
@@ -114,11 +122,6 @@ It is a plugin that show `radios buttons` like switch
         'right': 39,
         'down': 40
       };
-      this.event = new CustomEvent('switched', {
-        'detail': {
-          'radios': this.radios
-        }
-      });
       return;
     }
 
@@ -146,7 +149,6 @@ It is a plugin that show `radios buttons` like switch
       this.sOn.style.width = this.sOff.style.width = "" + this.size + "px";
       this.sFlex.style.width = (this.size * 2) + sizes.knob + 'px';
       this.container.style.width = this.size + sizes.knob + 'px';
-      this.sFlex.addEventListener('keydown', onKeydown.bind(this), false);
       pan = new Hammer.Pan({
         direction: Hammer.DIRECTION_HORIZONTAL
       });
@@ -158,11 +160,19 @@ It is a plugin that show `radios buttons` like switch
       });
       mc.add(tap);
       mc.add(pan);
-      mc.on("tap", onTap.bind(this));
-      mc.on("panstart", onStart.bind(this));
-      mc.on("pan", onMove.bind(this));
-      mc.on("panend", onEnd.bind(this));
-      mc.on("pancancel", onEnd.bind(this));
+      mc.on('tap', onTap.bind(this));
+      mc.on('panstart', onStart.bind(this));
+      mc.on('pan', onMove.bind(this));
+      mc.on('panend', onEnd.bind(this));
+      mc.on('pancancel', onEnd.bind(this));
+      this.sFlex.addEventListener('keydown', onKeydown.bind(this), false);
+      this.eventSwitched = new CustomEvent('switched', {
+        'detail': {
+          'radios': this.radios,
+          'handler': this.sFlex
+        }
+      });
+      this.eventChange = new CustomEvent('change');
       if (this.side === null) {
         this.transform.translate.x = -this.size / 2;
         this.requestUpdate();

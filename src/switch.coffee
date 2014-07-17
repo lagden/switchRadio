@@ -11,7 +11,7 @@ It is a plugin that show `radios buttons` like switch
   if typeof define is "function" and define.amd
     define ['get-style-property/get-style-property', 'hammerjs/hammer'], factory
   else
-    root.Switch = factory(root.getStyleProperty, root.Hammer)
+    root.Switch = factory root.getStyleProperty, root.Hammer
   return
 ) @, (getStyleProperty, Hammer) ->
 
@@ -19,6 +19,7 @@ It is a plugin that show `radios buttons` like switch
 
   transformProperty = getStyleProperty 'transform'
 
+  # Template
   getTemplate = ->
     [
       '<div class="switchRadio__flex" tabindex="0" role="switch" aria-valueon="{valueon}" aria-valueoff="{valueoff}" aria-valuenow="{valuenow}" aria-labeledby="{labeledby}" aria-required="{required}">'
@@ -28,6 +29,7 @@ It is a plugin that show `radios buttons` like switch
       '</div>'
     ].join ''
 
+  # Event Handlers
   toggle = ->
     @transform.translate.x = if @side then -@size else 0
     @radios[0].checked = !@side
@@ -36,7 +38,8 @@ It is a plugin that show `radios buttons` like switch
     @captionsActive()
     @ariaAttr()
     @requestUpdate()
-    @container.dispatchEvent @event
+    @container.dispatchEvent @eventSwitched
+    radio.dispatchEvent @eventChange for radio in @radios when radio.checked
     return
 
   onStart = (event) ->
@@ -49,7 +52,7 @@ It is a plugin that show `radios buttons` like switch
     else
       v = if @side then -@size + event.deltaX else event.deltaX
 
-    @transform.translate.x = Math.min 0, Math.max(-@size, v)
+    @transform.translate.x = Math.min 0, Math.max -@size, v
     @sFlex.classList.add 'is-dragging'
     @active = true
     @captionsActive()
@@ -57,7 +60,7 @@ It is a plugin that show `radios buttons` like switch
     return
 
   onEnd = (event) ->
-    @side = Math.abs(@transform.translate.x) > @size / 2
+    @side = Boolean Math.abs(@transform.translate.x) > (@size / 2)
     @sFlex.classList.remove 'is-dragging'
     toggle.bind(@)()
     return
@@ -80,10 +83,9 @@ It is a plugin that show `radios buttons` like switch
       when @keyCodes.left
         @side = true
         toggle.bind(@)()
-
     return
 
-
+  # Master
   class Switch
     constructor: (container, required, labeledby) ->
       labeledby = labeledby || null
@@ -98,7 +100,7 @@ It is a plugin that show `radios buttons` like switch
       @radios = []
       [].forEach.call @container.querySelectorAll('input[type=radio]'), (
         (el, idx, arr) ->
-          @radios.push(el);
+          @radios.push el
           return
         ).bind @
 
@@ -107,38 +109,31 @@ It is a plugin that show `radios buttons` like switch
 
       @active = false
 
-      @ticking = false;
-      @transform = {
-        translate: {
+      @ticking = false
+      @transform =
+        translate:
           x: 0
-        }
-      }
 
-      @aria = {
+      @aria =
         'aria-valueon'   : @radios[0].value
         'aria-valueoff'  : @radios[1].value
         'aria-valuenow'  : null
         'aria-labeledby' : labeledby
         'aria-required'  : required
-      }
 
-      @keyCodes = {
+      @keyCodes =
         'enter' : 13
         'space' : 32
         'left'  : 37
         'up'    : 38
         'right' : 39
         'down'  : 40
-      }
-
-      @event = new CustomEvent 'switched',
-        'detail':
-          'radios': @radios
 
       return
 
     build: (captionOn, captionOff) ->
-      r = {
+      # Template Render
+      r =
         'captionOn'  : captionOn
         'captionOff' : captionOff
         'valueon'    : @aria['aria-valueon']
@@ -146,12 +141,13 @@ It is a plugin that show `radios buttons` like switch
         'valuenow'   : @aria['aria-valuenow']
         'labeledby'  : @aria['aria-labeledby']
         'required'   : @aria['aria-required']
-      }
+
       content = @template.replace /\{(.*?)\}/g, (a, b) ->
         return r[b]
 
       @container.insertAdjacentHTML 'afterbegin', content
 
+      # Size elements
       @sFlex = @container.querySelector '.switchRadio__flex'
       @sOn   = @container.querySelector '.switchRadio__flex > .switchRadio__caption--on'
       @sOff  = @container.querySelector '.switchRadio__flex > .switchRadio__caption--off'
@@ -165,24 +161,35 @@ It is a plugin that show `radios buttons` like switch
       @sFlex.style.width = (@size * 2) + sizes.knob + 'px'
       @container.style.width = @size + sizes.knob + 'px'
 
-      @sFlex.addEventListener 'keydown', onKeydown.bind(@), false
-
-      pan = new Hammer.Pan { direction: Hammer.DIRECTION_HORIZONTAL }
+      # Drag
+      pan = new Hammer.Pan direction: Hammer.DIRECTION_HORIZONTAL
       tap = new Hammer.Tap
 
-      mc = new Hammer.Manager @sFlex, {
+      mc = new Hammer.Manager @sFlex,
         dragLockToAxis: true
         dragBlockHorizontal: true
         preventDefault: true
-      }
+
       mc.add tap
       mc.add pan
-      mc.on "tap", onTap.bind(@)
-      mc.on "panstart", onStart.bind(@)
-      mc.on "pan", onMove.bind(@)
-      mc.on "panend", onEnd.bind(@)
-      mc.on "pancancel", onEnd.bind(@)
+      mc.on 'tap', onTap.bind @
+      mc.on 'panstart', onStart.bind @
+      mc.on 'pan', onMove.bind @
+      mc.on 'panend', onEnd.bind @
+      mc.on 'pancancel', onEnd.bind @
 
+      # Keyboard
+      @sFlex.addEventListener 'keydown', onKeydown.bind(@), false
+
+      # Custom events
+      @eventSwitched = new CustomEvent 'switched',
+        'detail':
+          'radios': @radios
+          'handler': @sFlex
+
+      @eventChange = new CustomEvent 'change'
+
+      # Init
       if @side == null
         @transform.translate.x = -@size / 2
         @requestUpdate()
@@ -195,7 +202,6 @@ It is a plugin that show `radios buttons` like switch
       clone = @container.cloneNode true
       clone.style.visibility = 'hidden'
       clone.style.position = 'absolute'
-      # console.log(root)
       document.body.appendChild clone
       sOn   = clone.querySelector '.switchRadio__flex > .switchRadio__caption--on'
       sOff  = clone.querySelector '.switchRadio__flex > .switchRadio__caption--off'
