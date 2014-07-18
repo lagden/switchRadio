@@ -55,7 +55,6 @@ It is a plugin that show `radios buttons` like switch
 
         @container.dispatchEvent @eventToggle
         radio.dispatchEvent @eventChange for radio in @radios when radio.checked
-
         return
 
       onStart: (event) ->
@@ -187,7 +186,6 @@ It is a plugin that show `radios buttons` like switch
 
         # Init
         _privados.toggle.bind(@)()
-
         return
 
       initCheck: (container) ->
@@ -199,13 +197,11 @@ It is a plugin that show `radios buttons` like switch
   # Master
   class Switch
     constructor: (container, required, labeledby) ->
-
       # Self instance
       return new Switch(container, required, labeledby) if false is (@ instanceof Switch)
 
       labeledby = labeledby || null
       required = required || false
-
 
       # Check if component was initialized
       if _privados.initCheck container
@@ -258,12 +254,18 @@ It is a plugin that show `radios buttons` like switch
         'down'  : 40
 
       _privados.build.bind(@)()
+      return
 
+    swap: (v)->
+      v = if v != undefined then v else null
+      @side = if v != null then v else !@side
+      _privados.toggle.bind(@)()
       return
 
     reset: ->
       @side = null
       _privados.toggle.bind(@)()
+      return
 
     getSizes: ->
       clone = @container.cloneNode true
@@ -286,11 +288,13 @@ It is a plugin that show `radios buttons` like switch
       else
         v = if @side then @radios[1].value else @radios[0].value
       @sFlex.setAttribute 'aria-valuenow', v
+      return
 
     captionsActive: ->
       method = if @active then 'add' else 'remove'
       @sOn.classList[method] 'is-active'
       @sOff.classList[method] 'is-active'
+      return
 
     updateTransform: ->
       value = ['translate3d(' + @transform.translate.x + 'px, 0, 0)']

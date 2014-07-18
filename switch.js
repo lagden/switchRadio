@@ -239,9 +239,15 @@ It is a plugin that show `radios buttons` like switch
       return;
     }
 
+    Switch.prototype.swap = function(v) {
+      v = v !== void 0 ? v : null;
+      this.side = v !== null ? v : !this.side;
+      _privados.toggle.bind(this)();
+    };
+
     Switch.prototype.reset = function() {
       this.side = null;
-      return _privados.toggle.bind(this)();
+      _privados.toggle.bind(this)();
     };
 
     Switch.prototype.getSizes = function() {
@@ -269,14 +275,14 @@ It is a plugin that show `radios buttons` like switch
       } else {
         v = this.side ? this.radios[1].value : this.radios[0].value;
       }
-      return this.sFlex.setAttribute('aria-valuenow', v);
+      this.sFlex.setAttribute('aria-valuenow', v);
     };
 
     Switch.prototype.captionsActive = function() {
       var method;
       method = this.active ? 'add' : 'remove';
       this.sOn.classList[method]('is-active');
-      return this.sOff.classList[method]('is-active');
+      this.sOff.classList[method]('is-active');
     };
 
     Switch.prototype.updateTransform = function() {
