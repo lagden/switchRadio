@@ -19,8 +19,8 @@ It is a plugin that show `radios buttons` like switch
 
   transformProperty = getStyleProperty 'transform'
 
-  # Template
   _privados =
+      # Template
       getTemplate: ->
         [
           '<div class="switchRadio__flex" tabindex="0" role="switch" aria-valueon="{valueon}" aria-valueoff="{valueoff}" aria-valuenow="{valuenow}" aria-labeledby="{labeledby}" aria-required="{required}">'
@@ -136,14 +136,14 @@ It is a plugin that show `radios buttons` like switch
 
         mc.add tap
         mc.add pan
-        mc.on 'tap'       , _privados.onTap.bind @
-        mc.on 'panstart'  , _privados.onStart.bind @
-        mc.on 'pan'       , _privados.onMove.bind @
-        mc.on 'panend'    , _privados.onEnd.bind @
-        mc.on 'pancancel' , _privados.onEnd.bind @
+        mc.on 'tap'       , _privados.onTap.bind(@)
+        mc.on 'panstart'  , _privados.onStart.bind(@)
+        mc.on 'pan'       , _privados.onMove.bind(@)
+        mc.on 'panend'    , _privados.onEnd.bind(@)
+        mc.on 'pancancel' , _privados.onEnd.bind(@)
 
         # Keyboard
-        @sFlex.addEventListener 'keydown', _privados.onKeydown.bind @, false
+        @sFlex.addEventListener 'keydown', _privados.onKeydown.bind(@), false
 
         # Custom events
         @eventSwitched = new CustomEvent 'switched',
@@ -171,6 +171,10 @@ It is a plugin that show `radios buttons` like switch
   # Master
   class Switch
     constructor: (container, required, labeledby) ->
+
+      # Self instance
+      return new Switch(container, required, labeledby) if false is (@ instanceof Switch)
+
       labeledby = labeledby || null
       required = required || false
 

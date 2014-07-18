@@ -128,7 +128,7 @@ It is a plugin that show `radios buttons` like switch
       mc.on('pan', _privados.onMove.bind(this));
       mc.on('panend', _privados.onEnd.bind(this));
       mc.on('pancancel', _privados.onEnd.bind(this));
-      this.sFlex.addEventListener('keydown', _privados.onKeydown.bind(this, false));
+      this.sFlex.addEventListener('keydown', _privados.onKeydown.bind(this), false);
       this.eventSwitched = new CustomEvent('switched', {
         'detail': {
           'radios': this.radios,
@@ -161,6 +161,9 @@ It is a plugin that show `radios buttons` like switch
   Switch = (function() {
     function Switch(container, required, labeledby) {
       var radio, radios, _i, _len;
+      if (false === (this instanceof Switch)) {
+        return new Switch(container, required, labeledby);
+      }
       labeledby = labeledby || null;
       required = required || false;
       if (_privados.initCheck(container)) {
@@ -168,9 +171,6 @@ It is a plugin that show `radios buttons` like switch
         return null;
       } else {
         container.setAttribute('data-switcher-' + new Date().getTime(), '');
-      }
-      if (false === (this instanceof Switch)) {
-        return new Switch(container, required, labeledby);
       }
       this.container = container;
       this.radios = [];

@@ -82,7 +82,6 @@ gulp.task 'uglify', ->
 
 gulp.task 'server', ['default', 'watch'], ->
   browserSync
-    notify: false
     port: 8182
     server:
       baseDir: [
