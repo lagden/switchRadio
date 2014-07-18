@@ -32,22 +32,30 @@ It is a plugin that show `radios buttons` like switch
 
       # Event Handlers
       toggle: ->
-        @transform.translate.x = if @side then -@size else 0
-
         if @side != null
-            @radios[0].checked = !@side
-            @radios[1].checked = @side
-            @active = true
-        else
-            @active =
-            @radios[0].checked =
-            @radios[1].checked = false
+          @active = true
+          @transform.translate.x = if @side then -@size else 0
 
-        @captionsActive()
+          if @side
+            @radios[0].removeAttribute 'checked'
+            @radios[1].setAttribute 'checked', ''
+          else
+            @radios[1].removeAttribute 'checked'
+            @radios[0].setAttribute 'checked', ''
+
+        else
+          @active = false
+          @transform.translate.x = -@size / 2
+          for radio in @radios
+            radio.removeAttribute 'checked'
+
         @ariaAttr()
+        @captionsActive()
         @requestUpdate()
-        @container.dispatchEvent @eventSwitched
+
+        @container.dispatchEvent @eventToggle
         radio.dispatchEvent @eventChange for radio in @radios when radio.checked
+
         return
 
       onStart: (event) ->
@@ -55,6 +63,7 @@ It is a plugin that show `radios buttons` like switch
         return
 
       onMove: (event) ->
+        console.log event.deltaX
         if @side == null
           v = -@size/2 + event.deltaX
         else
@@ -74,7 +83,12 @@ It is a plugin that show `radios buttons` like switch
         return
 
       onTap: (event) ->
-        @side = !@side
+        if @side == null
+          center = @container.offsetLeft + (@container.clientWidth / 2)
+          @side = event.center.x < center
+        else
+          @side = !@side
+
         _privados.toggle.bind(@)()
         return
 
@@ -152,26 +166,27 @@ It is a plugin that show `radios buttons` like switch
         # Keyboard
         @sFlex.addEventListener 'keydown', _privados.onKeydown.bind(@), false
 
-        xxx = (event) ->
-            console.log('xxx')
-
-        for radio in @radios
-            radio.addEventListener 'input', xxx.bind(@), false
-
         # Custom events
-        @eventSwitched = new CustomEvent 'switched',
+        @eventToggle = new CustomEvent 'switch:toggle',
           'detail':
             'radios': @radios
             'handler': @sFlex
 
-        @eventChange = new CustomEvent 'change'
+        @eventChange = new Event 'change'
+
+        # Observer
+        # @observer = new MutationObserver (mutations) ->
+        #   mutations.forEach (mutation) ->
+        #     console.log mutation
+        #     return
+
+        # @observer.observe @sFlex, attributes: true
+
+        # for radio in @radios
+        #   @observer.observe radio, attributes: true
 
         # Init
-        if @side == null
-          @transform.translate.x = -@size / 2
-          @requestUpdate()
-        else
-          _privados.toggle.bind(@)()
+        _privados.toggle.bind(@)()
 
         return
 
@@ -213,8 +228,8 @@ It is a plugin that show `radios buttons` like switch
       @size = 0
 
       @side = null
-      @side = false if @radios[0].checked
-      @side = true if @radios[1].checked
+      @side = false if @radios[0].checked and !@radios[1].checked
+      @side = true  if @radios[1].checked and !@radios[0].checked
 
       @active = false
 
@@ -242,6 +257,10 @@ It is a plugin that show `radios buttons` like switch
       _privados.build.bind(@)()
 
       return
+
+    reset: ->
+      @side = null
+      _privados.toggle.bind(@)()
 
     getSizes: ->
       clone = @container.cloneNode true

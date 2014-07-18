@@ -22,22 +22,33 @@ It is a plugin that show `radios buttons` like switch
       return ['<div class="switchRadio__flex" tabindex="0" role="switch" aria-valueon="{valueon}" aria-valueoff="{valueoff}" aria-valuenow="{valuenow}" aria-labeledby="{labeledby}" aria-required="{required}">', '<div class="switchRadio__caption switchRadio__caption--on">{captionOn}</div>', '<div class="switchRadio__knob"></div>', '<div class="switchRadio__caption switchRadio__caption--off">{captionOff}</div>', '</div>'].join('');
     },
     toggle: function() {
-      var radio, _i, _len, _ref;
-      this.transform.translate.x = this.side ? -this.size : 0;
+      var radio, _i, _j, _len, _len1, _ref, _ref1;
       if (this.side !== null) {
-        this.radios[0].checked = !this.side;
-        this.radios[1].checked = this.side;
         this.active = true;
+        this.transform.translate.x = this.side ? -this.size : 0;
+        if (this.side) {
+          this.radios[0].removeAttribute('checked');
+          this.radios[1].setAttribute('checked', '');
+        } else {
+          this.radios[1].removeAttribute('checked');
+          this.radios[0].setAttribute('checked', '');
+        }
       } else {
-        this.active = this.radios[0].checked = this.radios[1].checked = false;
+        this.active = false;
+        this.transform.translate.x = -this.size / 2;
+        _ref = this.radios;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          radio = _ref[_i];
+          radio.removeAttribute('checked');
+        }
       }
-      this.captionsActive();
       this.ariaAttr();
+      this.captionsActive();
       this.requestUpdate();
-      this.container.dispatchEvent(this.eventSwitched);
-      _ref = this.radios;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        radio = _ref[_i];
+      this.container.dispatchEvent(this.eventToggle);
+      _ref1 = this.radios;
+      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+        radio = _ref1[_j];
         if (radio.checked) {
           radio.dispatchEvent(this.eventChange);
         }
@@ -48,6 +59,7 @@ It is a plugin that show `radios buttons` like switch
     },
     onMove: function(event) {
       var v;
+      console.log(event.deltaX);
       if (this.side === null) {
         v = -this.size / 2 + event.deltaX;
       } else {
@@ -65,7 +77,13 @@ It is a plugin that show `radios buttons` like switch
       _privados.toggle.bind(this)();
     },
     onTap: function(event) {
-      this.side = !this.side;
+      var center;
+      if (this.side === null) {
+        center = this.container.offsetLeft + (this.container.clientWidth / 2);
+        this.side = event.center.x < center;
+      } else {
+        this.side = !this.side;
+      }
       _privados.toggle.bind(this)();
     },
     onKeydown: function(event) {
@@ -85,7 +103,7 @@ It is a plugin that show `radios buttons` like switch
       }
     },
     build: function() {
-      var captionOff, captionOn, content, labels, mc, pan, r, radio, sizes, tap, xxx, _i, _len, _ref;
+      var captionOff, captionOn, content, labels, mc, pan, r, sizes, tap;
       captionOn = captionOff = '';
       labels = this.container.getElementsByTagName('label');
       if (labels.length === 2) {
@@ -133,27 +151,14 @@ It is a plugin that show `radios buttons` like switch
       mc.on('panend', _privados.onEnd.bind(this));
       mc.on('pancancel', _privados.onEnd.bind(this));
       this.sFlex.addEventListener('keydown', _privados.onKeydown.bind(this), false);
-      xxx = function(event) {
-        return console.log('xxx');
-      };
-      _ref = this.radios;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        radio = _ref[_i];
-        radio.addEventListener('input', xxx.bind(this), false);
-      }
-      this.eventSwitched = new CustomEvent('switched', {
+      this.eventToggle = new CustomEvent('switch:toggle', {
         'detail': {
           'radios': this.radios,
           'handler': this.sFlex
         }
       });
-      this.eventChange = new CustomEvent('change');
-      if (this.side === null) {
-        this.transform.translate.x = -this.size / 2;
-        this.requestUpdate();
-      } else {
-        _privados.toggle.bind(this)();
-      }
+      this.eventChange = new Event('change');
+      _privados.toggle.bind(this)();
     },
     initCheck: function(container) {
       var attrib, attribs, data, regex, _i, _len;
@@ -200,10 +205,10 @@ It is a plugin that show `radios buttons` like switch
       this.template = _privados.getTemplate();
       this.size = 0;
       this.side = null;
-      if (this.radios[0].checked) {
+      if (this.radios[0].checked && !this.radios[1].checked) {
         this.side = false;
       }
-      if (this.radios[1].checked) {
+      if (this.radios[1].checked && !this.radios[0].checked) {
         this.side = true;
       }
       this.active = false;
@@ -231,6 +236,11 @@ It is a plugin that show `radios buttons` like switch
       _privados.build.bind(this)();
       return;
     }
+
+    Switch.prototype.reset = function() {
+      this.side = null;
+      return _privados.toggle.bind(this)();
+    };
 
     Switch.prototype.getSizes = function() {
       var clone, knob, sOff, sOn, sizes;
