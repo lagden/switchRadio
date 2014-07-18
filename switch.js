@@ -24,9 +24,13 @@ It is a plugin that show `radios buttons` like switch
     toggle: function() {
       var radio, _i, _len, _ref;
       this.transform.translate.x = this.side ? -this.size : 0;
-      this.radios[0].checked = !this.side;
-      this.radios[1].checked = this.side;
-      this.active = true;
+      if (this.side !== null) {
+        this.radios[0].checked = !this.side;
+        this.radios[1].checked = this.side;
+        this.active = true;
+      } else {
+        this.active = this.radios[0].checked = this.radios[1].checked = false;
+      }
       this.captionsActive();
       this.ariaAttr();
       this.requestUpdate();
@@ -81,7 +85,7 @@ It is a plugin that show `radios buttons` like switch
       }
     },
     build: function() {
-      var captionOff, captionOn, content, labels, mc, pan, r, sizes, tap;
+      var captionOff, captionOn, content, labels, mc, pan, r, radio, sizes, tap, xxx, _i, _len, _ref;
       captionOn = captionOff = '';
       labels = this.container.getElementsByTagName('label');
       if (labels.length === 2) {
@@ -129,6 +133,14 @@ It is a plugin that show `radios buttons` like switch
       mc.on('panend', _privados.onEnd.bind(this));
       mc.on('pancancel', _privados.onEnd.bind(this));
       this.sFlex.addEventListener('keydown', _privados.onKeydown.bind(this), false);
+      xxx = function(event) {
+        return console.log('xxx');
+      };
+      _ref = this.radios;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        radio = _ref[_i];
+        radio.addEventListener('input', xxx.bind(this), false);
+      }
       this.eventSwitched = new CustomEvent('switched', {
         'detail': {
           'radios': this.radios,

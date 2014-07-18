@@ -22,6 +22,9 @@ html(lang='en')
         form(action='index.html', method='GET')
             .mar-b-20
                 #labelSexo.label Qual é o sexo?
+                input
+            .mar-b-20
+                #labelSexo.label Qual é o sexo?
                 .switchRadio
                     label(for='SexoM') Masculino
                     input#SexoM(type='radio', title='Masculino', name='sexo', value='M')
@@ -37,6 +40,7 @@ html(lang='en')
                     input#nao(type='radio', title='Não', name='switch', value='N')
 
             button(type='submit') OK
+            button(type='reset') Reset
 
         script(src='switch.pkg.min.js')
         script.

@@ -33,9 +33,16 @@ It is a plugin that show `radios buttons` like switch
       # Event Handlers
       toggle: ->
         @transform.translate.x = if @side then -@size else 0
-        @radios[0].checked = !@side
-        @radios[1].checked = @side
-        @active = true
+
+        if @side != null
+            @radios[0].checked = !@side
+            @radios[1].checked = @side
+            @active = true
+        else
+            @active =
+            @radios[0].checked =
+            @radios[1].checked = false
+
         @captionsActive()
         @ariaAttr()
         @requestUpdate()
@@ -144,6 +151,12 @@ It is a plugin that show `radios buttons` like switch
 
         # Keyboard
         @sFlex.addEventListener 'keydown', _privados.onKeydown.bind(@), false
+
+        xxx = (event) ->
+            console.log('xxx')
+
+        for radio in @radios
+            radio.addEventListener 'input', xxx.bind(@), false
 
         # Custom events
         @eventSwitched = new CustomEvent 'switched',
