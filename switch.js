@@ -59,7 +59,6 @@ It is a plugin that show `radios buttons` like switch
     },
     onMove: function(event) {
       var v;
-      console.log(event.deltaX);
       if (this.side === null) {
         v = -this.size / 2 + event.deltaX;
       } else {
@@ -188,7 +187,7 @@ It is a plugin that show `radios buttons` like switch
         console.warn('The component has been initialized.');
         return null;
       } else {
-        this.token = String(new Date().getTime() * Math.random()).split('.')[0];
+        this.token = 'sr' + String(new Date().getTime() * Math.random()).split('.')[0];
         container.setAttribute('data-token', this.token);
         container.setAttribute("data-switcher-" + this.token, '');
       }
