@@ -77,9 +77,10 @@ It is a plugin that show `radios buttons` like switch
       _privados.toggle.bind(this)();
     },
     onTap: function(event) {
-      var center;
+      var center, rect;
       if (this.side === null) {
-        center = this.container.offsetLeft + (this.container.clientWidth / 2);
+        rect = this.container.getBoundingClientRect();
+        center = rect.left + (rect.width / 2);
         this.side = event.center.x < center;
       } else {
         this.side = !this.side;

@@ -84,7 +84,8 @@ It is a plugin that show `radios buttons` like switch
 
       onTap: (event) ->
         if @side == null
-          center = @container.offsetLeft + (@container.clientWidth / 2)
+          rect = @container.getBoundingClientRect()
+          center = rect.left + (rect.width / 2)
           @side = event.center.x < center
         else
           @side = !@side
