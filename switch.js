@@ -188,7 +188,9 @@ It is a plugin that show `radios buttons` like switch
         console.warn('The component has been initialized.');
         return null;
       } else {
-        container.setAttribute('data-switcher-' + new Date().getTime(), '');
+        this.token = String(new Date().getTime() * Math.random()).split('.')[0];
+        container.setAttribute('data-token', this.token);
+        container.setAttribute("data-switcher-" + this.token, '');
       }
       this.container = container;
       this.radios = [];

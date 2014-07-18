@@ -63,7 +63,6 @@ It is a plugin that show `radios buttons` like switch
         return
 
       onMove: (event) ->
-        console.log event.deltaX
         if @side == null
           v = -@size/2 + event.deltaX
         else
@@ -207,12 +206,15 @@ It is a plugin that show `radios buttons` like switch
       labeledby = labeledby || null
       required = required || false
 
+
       # Check if component was initialized
       if _privados.initCheck container
         console.warn 'The component has been initialized.'
         return null
       else
-        container.setAttribute 'data-switcher-' + new Date().getTime(), ''
+        @token = 'sr' + String(new Date().getTime() * Math.random()).split('.')[0]
+        container.setAttribute 'data-token', @token
+        container.setAttribute "data-switcher-#{@token}", ''
 
       # Container
       @container = container
