@@ -241,7 +241,7 @@ It is a plugin that show `radios buttons` like switch
 
     Switch.prototype.swap = function(v) {
       v = v !== undefined ? v : null;
-      this.side = v !== null ? v : !this.side;
+      this.side = v !== null ? !v : !this.side;
       _privados.toggle.bind(this)();
     };
 

@@ -258,7 +258,7 @@ It is a plugin that show `radios buttons` like switch
 
     swap: (v)->
       v = if v isnt `undefined` then v else null
-      @side = if v isnt `null` then v else !@side
+      @side = if v isnt `null` then !v else !@side
       _privados.toggle.bind(@)()
       return
 
