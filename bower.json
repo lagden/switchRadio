@@ -1,5 +1,6 @@
 {
     "name": "switch-radio",
+    "title": "Switch Radio",
     "description": "It is a plugin that show radios buttons like switch",
     "version": "0.4.2",
     "author": "Thiago Lagden",
@@ -14,7 +15,6 @@
         "switch.css"
     ],
     "ignore": [
-        "node_modules",
         "examples",
         "src",
         "lib",
