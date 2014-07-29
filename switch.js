@@ -104,7 +104,6 @@ It is a plugin that show `radios buttons` like switch
     },
     onKeydown: function(event) {
       switch (event.keyCode) {
-        case this.keyCodes.enter:
         case this.keyCodes.space:
           this.side = !this.side;
           _privados.toggle.bind(this)();

@@ -3,7 +3,7 @@
   "title": "Switch Radio",
   "description": "It is a plugin that show radios buttons like switch",
   "main": "./switch.js",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "author": {
     "name": "Thiago Lagden",
     "email": "lagden@gmail.com",

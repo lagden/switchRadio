@@ -109,7 +109,7 @@ It is a plugin that show `radios buttons` like switch
 
       onKeydown: (event) ->
         switch event.keyCode
-          when @keyCodes.enter, @keyCodes.space
+          when @keyCodes.space
             @side = !@side
             _privados.toggle.bind(@)()
 
