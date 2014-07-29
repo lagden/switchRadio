@@ -9,13 +9,29 @@ It is a plugin that show `radios buttons` like switch
 
 ((root, factory) ->
   if typeof define is "function" and define.amd
-    define ['get-style-property/get-style-property', 'hammerjs/hammer'], factory
+    define ['get-style-property/get-style-property', 'classie/classie', 'hammerjs/hammer'], factory
   else
-    root.Switch = factory root.getStyleProperty, root.Hammer
+    root.SwitchRadio = factory root.getStyleProperty, root.classie, root.Hammer
   return
-) @, (getStyleProperty, Hammer) ->
+) @, (getStyleProperty, classie, Hammer) ->
 
   'use strict'
+
+  # CustomEvent() constructor functionality in Internet Explorer 9 and 10
+  (->
+    CustomEvent = (event, params) ->
+      params = params or
+        bubbles: false
+        cancelable: false
+        detail: undefined
+
+      evt = document.createEvent "CustomEvent"
+      evt.initCustomEvent event, params.bubbles, params.cancelable, params.detail
+      return evt
+    CustomEvent:: = window.Event::
+    window.CustomEvent = CustomEvent
+    return
+  )()
 
   transformProperty = getStyleProperty 'transform'
 
@@ -68,7 +84,7 @@ It is a plugin that show `radios buttons` like switch
           v = if @side then -@size + event.deltaX else event.deltaX
 
         @transform.translate.x = Math.min 0, Math.max -@size, v
-        @sFlex.classList.add 'is-dragging'
+        classie.add @sFlex, 'is-dragging'
         @active = true
         @captionsActive()
         @requestUpdate()
@@ -76,7 +92,7 @@ It is a plugin that show `radios buttons` like switch
 
       onEnd: (event) ->
         @side = Boolean Math.abs(@transform.translate.x) > (@size / 2)
-        @sFlex.classList.remove 'is-dragging'
+        classie.remove @sFlex, 'is-dragging'
         _privados.toggle.bind(@)()
         return
 
@@ -171,8 +187,6 @@ It is a plugin that show `radios buttons` like switch
             'radios': @radios
             'handler': @sFlex
 
-        @eventChange = new Event 'change'
-
         # Observer
         # @observer = new MutationObserver (mutations) ->
         #   mutations.forEach (mutation) ->
@@ -195,10 +209,10 @@ It is a plugin that show `radios buttons` like switch
         return true if !!data
 
   # Master
-  class Switch
+  class SwitchRadio
     constructor: (container, required, labeledby) ->
       # Self instance
-      return new Switch(container, required, labeledby) if false is (@ instanceof Switch)
+      return new SwitchRadio(container, required, labeledby) if false is (@ instanceof SwitchRadio)
 
       labeledby = labeledby || null
       required = required || false
@@ -211,6 +225,9 @@ It is a plugin that show `radios buttons` like switch
         @token = 'sr' + String(new Date().getTime() * Math.random()).split('.')[0]
         container.setAttribute 'data-token', @token
         container.setAttribute "data-switcher-#{@token}", ''
+
+      # Custom Event
+      @eventChange = new CustomEvent 'change'
 
       # Container
       @container = container
@@ -257,8 +274,8 @@ It is a plugin that show `radios buttons` like switch
       return
 
     swap: (v)->
-      v = if v isnt `undefined` then v else null
-      @side = if v isnt `null` then !v else !@side
+      v = if v isnt undefined then v else null
+      @side = if v isnt null then !v else !@side
       _privados.toggle.bind(@)()
       return
 
@@ -279,7 +296,7 @@ It is a plugin that show `radios buttons` like switch
         'sOn': sOn.clientWidth
         'sOff': sOff.clientWidth
         'knob': knob.clientWidth
-      clone.remove()
+      document.body.removeChild clone
       return sizes
 
     ariaAttr: ->
@@ -292,8 +309,8 @@ It is a plugin that show `radios buttons` like switch
 
     captionsActive: ->
       method = if @active then 'add' else 'remove'
-      @sOn.classList[method] 'is-active'
-      @sOff.classList[method] 'is-active'
+      classie[method] @sOn, 'is-active'
+      classie[method] @sOff, 'is-active'
       return
 
     updateTransform: ->
@@ -308,4 +325,4 @@ It is a plugin that show `radios buttons` like switch
         requestAnimationFrame @updateTransform.bind(@)
       return
 
-  return Switch
+  return SwitchRadio

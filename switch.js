@@ -9,13 +9,29 @@ It is a plugin that show `radios buttons` like switch
  */
 (function(root, factory) {
   if (typeof define === "function" && define.amd) {
-    define(['get-style-property/get-style-property', 'hammerjs/hammer'], factory);
+    define(['get-style-property/get-style-property', 'classie/classie', 'hammerjs/hammer'], factory);
   } else {
-    root.Switch = factory(root.getStyleProperty, root.Hammer);
+    root.SwitchRadio = factory(root.getStyleProperty, root.classie, root.Hammer);
   }
-})(this, function(getStyleProperty, Hammer) {
+})(this, function(getStyleProperty, classie, Hammer) {
   'use strict';
-  var Switch, transformProperty, _privados;
+  var SwitchRadio, transformProperty, _privados;
+  (function() {
+    var CustomEvent;
+    CustomEvent = function(event, params) {
+      var evt;
+      params = params || {
+        bubbles: false,
+        cancelable: false,
+        detail: void 0
+      };
+      evt = document.createEvent("CustomEvent");
+      evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
+      return evt;
+    };
+    CustomEvent.prototype = window.Event.prototype;
+    window.CustomEvent = CustomEvent;
+  })();
   transformProperty = getStyleProperty('transform');
   _privados = {
     getTemplate: function() {
@@ -65,14 +81,14 @@ It is a plugin that show `radios buttons` like switch
         v = this.side ? -this.size + event.deltaX : event.deltaX;
       }
       this.transform.translate.x = Math.min(0, Math.max(-this.size, v));
-      this.sFlex.classList.add('is-dragging');
+      classie.add(this.sFlex, 'is-dragging');
       this.active = true;
       this.captionsActive();
       this.requestUpdate();
     },
     onEnd: function(event) {
       this.side = Boolean(Math.abs(this.transform.translate.x) > (this.size / 2));
-      this.sFlex.classList.remove('is-dragging');
+      classie.remove(this.sFlex, 'is-dragging');
       _privados.toggle.bind(this)();
     },
     onTap: function(event) {
@@ -157,7 +173,6 @@ It is a plugin that show `radios buttons` like switch
           'handler': this.sFlex
         }
       });
-      this.eventChange = new Event('change');
       _privados.toggle.bind(this)();
     },
     initCheck: function(container) {
@@ -175,11 +190,11 @@ It is a plugin that show `radios buttons` like switch
       }
     }
   };
-  Switch = (function() {
-    function Switch(container, required, labeledby) {
+  SwitchRadio = (function() {
+    function SwitchRadio(container, required, labeledby) {
       var radio, radios, _i, _len;
-      if (false === (this instanceof Switch)) {
-        return new Switch(container, required, labeledby);
+      if (false === (this instanceof SwitchRadio)) {
+        return new SwitchRadio(container, required, labeledby);
       }
       labeledby = labeledby || null;
       required = required || false;
@@ -191,6 +206,7 @@ It is a plugin that show `radios buttons` like switch
         container.setAttribute('data-token', this.token);
         container.setAttribute("data-switcher-" + this.token, '');
       }
+      this.eventChange = new CustomEvent('change');
       this.container = container;
       this.radios = [];
       radios = this.container.getElementsByTagName('input');
@@ -239,18 +255,18 @@ It is a plugin that show `radios buttons` like switch
       return;
     }
 
-    Switch.prototype.swap = function(v) {
-      v = v !== undefined ? v : null;
+    SwitchRadio.prototype.swap = function(v) {
+      v = v !== void 0 ? v : null;
       this.side = v !== null ? !v : !this.side;
       _privados.toggle.bind(this)();
     };
 
-    Switch.prototype.reset = function() {
+    SwitchRadio.prototype.reset = function() {
       this.side = null;
       _privados.toggle.bind(this)();
     };
 
-    Switch.prototype.getSizes = function() {
+    SwitchRadio.prototype.getSizes = function() {
       var clone, knob, sOff, sOn, sizes;
       clone = this.container.cloneNode(true);
       clone.style.visibility = 'hidden';
@@ -264,11 +280,11 @@ It is a plugin that show `radios buttons` like switch
         'sOff': sOff.clientWidth,
         'knob': knob.clientWidth
       };
-      clone.remove();
+      document.body.removeChild(clone);
       return sizes;
     };
 
-    Switch.prototype.ariaAttr = function() {
+    SwitchRadio.prototype.ariaAttr = function() {
       var v;
       if (this.side === null) {
         v = this.side;
@@ -278,29 +294,29 @@ It is a plugin that show `radios buttons` like switch
       this.sFlex.setAttribute('aria-valuenow', v);
     };
 
-    Switch.prototype.captionsActive = function() {
+    SwitchRadio.prototype.captionsActive = function() {
       var method;
       method = this.active ? 'add' : 'remove';
-      this.sOn.classList[method]('is-active');
-      this.sOff.classList[method]('is-active');
+      classie[method](this.sOn, 'is-active');
+      classie[method](this.sOff, 'is-active');
     };
 
-    Switch.prototype.updateTransform = function() {
+    SwitchRadio.prototype.updateTransform = function() {
       var value;
       value = ['translate3d(' + this.transform.translate.x + 'px, 0, 0)'];
       this.sFlex.style[transformProperty] = value.join(" ");
       this.ticking = false;
     };
 
-    Switch.prototype.requestUpdate = function() {
+    SwitchRadio.prototype.requestUpdate = function() {
       if (this.ticking === false) {
         this.ticking = true;
         requestAnimationFrame(this.updateTransform.bind(this));
       }
     };
 
-    return Switch;
+    return SwitchRadio;
 
   })();
-  return Switch;
+  return SwitchRadio;
 });

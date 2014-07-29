@@ -1,13 +1,14 @@
 'use strict'
 
-gulp   = require 'gulp'
-sass   = require 'gulp-ruby-sass'
-prefix = require 'gulp-autoprefixer'
-jade   = require 'gulp-jade'
-coffee = require 'gulp-coffee'
-uglify = require 'gulp-uglifyjs'
-filter = require 'gulp-filter'
-util   = require 'gulp-util'
+gulp       = require 'gulp'
+sass       = require 'gulp-ruby-sass'
+prefix     = require 'gulp-autoprefixer'
+jade       = require 'gulp-jade'
+coffee     = require 'gulp-coffee'
+coffeelint = require 'gulp-coffeelint'
+uglify     = require 'gulp-uglifyjs'
+filter     = require 'gulp-filter'
+util       = require 'gulp-util'
 
 browserSync = require 'browser-sync'
 reload      = browserSync.reload
@@ -30,6 +31,7 @@ sources =
   coffee : './src/*.coffee'
   js     : [
     './lib/vendor/get-style-property/get-style-property.js'
+    './lib/vendor/classie/classie.js'
     './lib/vendor/hammerjs/hammer.js'
     './switch.js'
   ]
@@ -65,6 +67,14 @@ gulp.task 'jade', ->
       stream: true
   return
 
+gulp.task 'lint', ->
+  gulp.src sources.coffee
+    .pipe coffeelint(
+        max_line_length:
+            level: 'ignore'
+    )
+    .pipe coffeelint.reporter()
+
 gulp.task 'coffee', ->
   gulp.src sources.coffee
     .pipe coffee(bare: true).on 'error', util.log
@@ -80,6 +90,14 @@ gulp.task 'uglify', ->
     .pipe gulp.dest destinations.js
   return
 
+gulp.task 'watch', ->
+  gulp.watch sources.sass, ['sass']
+  gulp.watch sources.jade, ['jade']
+  gulp.watch sources.coffee, ['lint', 'coffee', 'uglify']
+  return
+
+gulp.task 'default', ['sass', 'jade', 'lint', 'coffee', 'uglify']
+
 gulp.task 'server', ['default', 'watch'], ->
   browserSync
     port: 8182
@@ -88,11 +106,3 @@ gulp.task 'server', ['default', 'watch'], ->
         'examples', './'
       ]
   return
-
-gulp.task 'watch', ->
-  gulp.watch sources.sass, ['sass']
-  gulp.watch sources.jade, ['jade']
-  gulp.watch sources.coffee, ['coffee', 'uglify']
-  return
-
-gulp.task 'default', ['sass', 'jade', 'coffee', 'uglify']
