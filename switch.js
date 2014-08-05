@@ -44,10 +44,14 @@ It is a plugin that show `radios buttons` like switch
         this.transform.translate.x = this.side ? -this.size : 0;
         if (this.side) {
           this.radios[0].removeAttribute('checked');
+          this.radios[0].checked = false;
           this.radios[1].setAttribute('checked', '');
+          this.radios[1].checked = true;
         } else {
           this.radios[1].removeAttribute('checked');
+          this.radios[1].checked = false;
           this.radios[0].setAttribute('checked', '');
+          this.radios[0].checked = true;
         }
       } else {
         this.active = false;
@@ -56,6 +60,7 @@ It is a plugin that show `radios buttons` like switch
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           radio = _ref[_i];
           radio.removeAttribute('checked');
+          radio.checked = false;
         }
       }
       this.ariaAttr();

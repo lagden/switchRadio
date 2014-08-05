@@ -54,16 +54,21 @@ It is a plugin that show `radios buttons` like switch
 
           if @side
             @radios[0].removeAttribute 'checked'
+            @radios[0].checked = false
             @radios[1].setAttribute 'checked', ''
+            @radios[1].checked = true
           else
             @radios[1].removeAttribute 'checked'
+            @radios[1].checked = false
             @radios[0].setAttribute 'checked', ''
+            @radios[0].checked = true
 
         else
           @active = false
           @transform.translate.x = -@size / 2
           for radio in @radios
             radio.removeAttribute 'checked'
+            radio.checked = false
 
         @ariaAttr()
         @captionsActive()
