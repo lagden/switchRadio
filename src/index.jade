@@ -37,29 +37,42 @@ html(lang='en')
 
             button(type='submit') OK
             button(type='reset') Reset
+            button#destroy(type='button') Destroy
 
         script(src='switch.pkg.js')
         script.
             var cacheSwitches = [];
             [].forEach.call(document.querySelectorAll('.switchRadio'), function(el, idx, arr) {
-                cacheSwitches.push(new SwitchRadio(el, false, el.previousElementSibling.id));
-                el.addEventListener('switch:toggle', function(event) {
-                    for (var i = 0, len = event.detail.radios.length; i < len; i++) {
-                        var r = event.detail.radios[i];
-                        console.log('switch:toggle', r.id, r.checked);
+                var sr = SwitchRadio(el, false, el.previousElementSibling.id);
+
+                sr.on('toggle', function(obj) {
+                    for (var i = 0, len = obj.radios.length; i < len; i++) {
+                        var r = obj.radios[i];
+                        console.log('toggle', r.id, r.checked);
                     }
                 });
 
-                //- [].forEach.call(el.querySelectorAll('input[type=radio]'), function(radio) {
-                //-     radio.addEventListener('change', function(event) {
-                //-         console.log(event.currentTarget);
-                //-     });
-                //- });
+                [].forEach.call(el.querySelectorAll('input[type=radio]'), function(radio) {
+                    radio.addEventListener('change', function(event) {
+                        var r = event.currentTarget;
+                        var side = Boolean(parseInt(r.getAttribute('data-side'), 10))
+                        sr.toggle(side)
+                    }, false);
+                });
+
+                cacheSwitches.push(sr);
             });
 
             var frm = document.querySelector('#frm');
             frm.addEventListener('reset', function(event) {
                 for (var i = 0, len = cacheSwitches.length; i < len; i++) {
                     cacheSwitches[i].reset();
+                }
+            });
+
+            var btn = document.querySelector('#destroy');
+            btn.addEventListener('click', function(event) {
+                for (var i = 0, len = cacheSwitches.length; i < len; i++) {
+                    cacheSwitches[i].destroy();
                 }
             });

@@ -2933,11 +2933,14 @@ if (typeof define == TYPE_FUNCTION && define.amd) {
 /*
 switch.js - SwitchRadio
 
-It is a plugin that show `radios buttons` like switch
+It is a plugin that show `radios buttons` like slide switch
 
 @author      Thiago Lagden <lagden [at] gmail.com>
 @copyright   Author
  */
+var __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
 (function(root, factory) {
   if (typeof define === "function" && define.amd) {
     define(['get-style-property/get-style-property', 'classie/classie', 'eventEmitter/EventEmitter', 'hammerjs/hammer'], factory);
@@ -2946,7 +2949,7 @@ It is a plugin that show `radios buttons` like switch
   }
 })(this, function(getStyleProperty, classie, EventEmitter, Hammer) {
   'use strict';
-  var SwitchRadio, transformProperty, _privados;
+  var GUID, SwitchRadio, instances, transformProperty, _SPL;
   if (!window.CustomEvent) {
     (function() {
       var CustomEvent;
@@ -2966,43 +2969,16 @@ It is a plugin that show `radios buttons` like switch
     })();
   }
   transformProperty = getStyleProperty('transform');
-  _privados = {
-    getTemplate: function() {
-      return ['<div class="switchRadio__flex" ', 'tabindex="0" role="switch" aria-valueon="{valueon}" ', 'aria-valueoff="{valueoff}" aria-valuenow="{valuenow}" ', 'aria-labeledby="{labeledby}" aria-required="{required}">', '<div class="switchRadio__caption switchRadio__caption--on">', '{captionOn}</div>', '<div class="switchRadio__knob"></div>', '<div class="switchRadio__caption switchRadio__caption--off">', '{captionOff}</div>', '</div>'].join('');
-    },
-    toggle: function() {
-      var radio, _i, _j, _len, _len1, _ref, _ref1;
-      if (this.side !== null) {
-        this.active = true;
-        this.transform.translate.x = this.side ? -this.size : 0;
-        if (this.side) {
-          this.radios[0].removeAttribute('checked');
-          this.radios[0].checked = false;
-          this.radios[1].setAttribute('checked', '');
-          this.radios[1].checked = true;
-        } else {
-          this.radios[1].removeAttribute('checked');
-          this.radios[1].checked = false;
-          this.radios[0].setAttribute('checked', '');
-          this.radios[0].checked = true;
-        }
-      } else {
-        this.active = false;
-        this.transform.translate.x = -this.size / 2;
-        _ref = this.radios;
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          radio = _ref[_i];
-          radio.removeAttribute('checked');
-          radio.checked = false;
-        }
-      }
-      this.ariaAttr();
-      this.captionsActive();
-      this.requestUpdate();
-      this.container.dispatchEvent(this.eventToggle);
-      _ref1 = this.radios;
-      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-        radio = _ref1[_j];
+  GUID = 0;
+  instances = {};
+  _SPL = {
+    onToggle: function() {
+      var radio, _i, _len, _ref;
+      this.toggle();
+      this.emitEvent('toggle', this.eventToggleParam);
+      _ref = this.radios;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        radio = _ref[_i];
         if (radio.checked) {
           radio.dispatchEvent(this.eventChange);
         }
@@ -3027,7 +3003,7 @@ It is a plugin that show `radios buttons` like switch
     onEnd: function(event) {
       this.side = Boolean(Math.abs(this.transform.translate.x) > (this.size / 2));
       classie.remove(this.sFlex, 'is-dragging');
-      _privados.toggle.bind(this)();
+      _SPL.onToggle.bind(this)();
     },
     onTap: function(event) {
       var center, rect;
@@ -3038,22 +3014,25 @@ It is a plugin that show `radios buttons` like switch
       } else {
         this.side = !this.side;
       }
-      _privados.toggle.bind(this)();
+      _SPL.onToggle.bind(this)();
     },
     onKeydown: function(event) {
       switch (event.keyCode) {
         case this.keyCodes.space:
           this.side = !this.side;
-          _privados.toggle.bind(this)();
+          _SPL.onToggle.bind(this)();
           break;
         case this.keyCodes.right:
           this.side = false;
-          _privados.toggle.bind(this)();
+          _SPL.onToggle.bind(this)();
           break;
         case this.keyCodes.left:
           this.side = true;
-          _privados.toggle.bind(this)();
+          _SPL.onToggle.bind(this)();
       }
+    },
+    getTemplate: function() {
+      return ['<div class="switchRadio__flex" ', 'tabindex="0" role="slider" ', 'aria-valuemin="{valuemin}" aria-valuemax="{valuemax}" ', 'aria-valuetext="{valuetext}" aria-valuenow="{valuenow}" ', 'aria-labeledby="{labeledby}" aria-required="{required}">', '<div class="switchRadio__caption switchRadio__caption--on">', '{captionOn}</div>', '<div class="switchRadio__knob"></div>', '<div class="switchRadio__caption switchRadio__caption--off">', '{captionOff}</div>', '</div>'].join('');
     },
     build: function() {
       var captionOff, captionOn, content, labels, mc, pan, r, sizes, tap;
@@ -3068,8 +3047,8 @@ It is a plugin that show `radios buttons` like switch
       r = {
         'captionOn': captionOn,
         'captionOff': captionOff,
-        'valueon': this.aria['aria-valueon'],
-        'valueoff': this.aria['aria-valueoff'],
+        'valuemax': this.aria['aria-valuemax'],
+        'valuemin': this.aria['aria-valuemin'],
         'valuenow': this.aria['aria-valuenow'],
         'labeledby': this.aria['aria-labeledby'],
         'required': this.aria['aria-required']
@@ -3098,23 +3077,26 @@ It is a plugin that show `radios buttons` like switch
       });
       mc.add(tap);
       mc.add(pan);
-      mc.on('tap', _privados.onTap.bind(this));
-      mc.on('panstart', _privados.onStart.bind(this));
-      mc.on('pan', _privados.onMove.bind(this));
-      mc.on('panend', _privados.onEnd.bind(this));
-      mc.on('pancancel', _privados.onEnd.bind(this));
-      this.sFlex.addEventListener('keydown', _privados.onKeydown.bind(this), false);
-      this.eventToggle = new CustomEvent('switch:toggle', {
-        'detail': {
+      mc.on('tap', _SPL.onTap.bind(this));
+      mc.on('panstart', _SPL.onStart.bind(this));
+      mc.on('pan', _SPL.onMove.bind(this));
+      mc.on('panend', _SPL.onEnd.bind(this));
+      mc.on('pancancel', _SPL.onEnd.bind(this));
+      this.sFlex.addEventListener('keydown', _SPL.onKeydown.bind(this), false);
+      this.eventToggleParam = [
+        {
+          'instance': this,
+          'container': this.container,
           'radios': this.radios,
           'handler': this.sFlex
         }
-      });
-      _privados.toggle.bind(this)();
+      ];
+      this.eventChange = new CustomEvent('change');
+      _SPL.onToggle.bind(this)();
     },
     initCheck: function(container) {
       var attrib, attribs, data, regex, _i, _len;
-      regex = /data-switcher-(\d+)/i;
+      regex = /data-sr(\d+)/i;
       attribs = container.attributes;
       for (_i = 0, _len = attribs.length; _i < _len; _i++) {
         attrib = attribs[_i];
@@ -3127,37 +3109,41 @@ It is a plugin that show `radios buttons` like switch
       }
     }
   };
-  SwitchRadio = (function() {
+  SwitchRadio = (function(_super) {
+    __extends(SwitchRadio, _super);
+
     function SwitchRadio(container, required, labeledby) {
-      var radio, radios, _i, _len;
+      var id, idx, radio, radios, _i, _len;
       if (false === (this instanceof SwitchRadio)) {
         return new SwitchRadio(container, required, labeledby);
       }
       labeledby = labeledby || null;
       required = required || false;
-      if (_privados.initCheck(container)) {
+      if (_SPL.initCheck(container)) {
         console.warn('The component has been initialized.');
         return null;
       } else {
-        this.token = 'sr' + String(Date.now() * Math.random()).split('.')[0];
-        container.setAttribute('data-token', this.token);
-        container.setAttribute("data-switcher-" + this.token, '');
+        id = ++GUID;
+        this.container = container;
+        this.container.srGUID = id;
+        instances[id] = this;
+        container.setAttribute("data-sr" + id, '');
       }
-      this.eventChange = new CustomEvent('change');
-      this.container = container;
       this.radios = [];
       radios = this.container.getElementsByTagName('input');
-      for (_i = 0, _len = radios.length; _i < _len; _i++) {
-        radio = radios[_i];
-        if (radio.type === 'radio') {
-          this.radios.push(radio);
+      for (idx = _i = 0, _len = radios.length; _i < _len; idx = ++_i) {
+        radio = radios[idx];
+        if (!(radio.type === 'radio')) {
+          continue;
         }
+        radio.setAttribute('data-side', idx);
+        this.radios.push(radio);
       }
       if (this.radios.length !== 2) {
         console.err('✖ No radios');
         return null;
       }
-      this.template = _privados.getTemplate();
+      this.template = _SPL.getTemplate();
       this.size = 0;
       this.side = null;
       if (this.radios[0].checked && !this.radios[1].checked) {
@@ -3174,32 +3160,62 @@ It is a plugin that show `radios buttons` like switch
         }
       };
       this.aria = {
-        'aria-valueon': this.radios[0].value,
-        'aria-valueoff': this.radios[1].value,
+        'aria-valuemax': this.radios[0].title,
+        'aria-valuemin': this.radios[1].title,
+        'aria-valuetext': null,
         'aria-valuenow': null,
         'aria-labeledby': labeledby,
         'aria-required': required
       };
       this.keyCodes = {
-        'enter': 13,
         'space': 32,
         'left': 37,
-        'up': 38,
-        'right': 39,
-        'down': 40
+        'right': 39
       };
-      _privados.build.bind(this)();
+      _SPL.build.bind(this)();
     }
+
+    SwitchRadio.prototype.toggle = function(v) {
+      var radio, _i, _len, _ref;
+      this.side = v !== void 0 ? v : this.side;
+      if (this.side !== null) {
+        this.active = true;
+        this.transform.translate.x = this.side ? -this.size : 0;
+        if (this.side) {
+          this.radios[0].removeAttribute('checked');
+          this.radios[0].checked = false;
+          this.radios[1].setAttribute('checked', '');
+          this.radios[1].checked = true;
+        } else {
+          this.radios[1].removeAttribute('checked');
+          this.radios[1].checked = false;
+          this.radios[0].setAttribute('checked', '');
+          this.radios[0].checked = true;
+        }
+      } else {
+        this.active = false;
+        this.transform.translate.x = -this.size / 2;
+        _ref = this.radios;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          radio = _ref[_i];
+          radio.removeAttribute('checked');
+          radio.checked = false;
+        }
+      }
+      this.ariaAttr();
+      this.captionsActive();
+      this.requestUpdate();
+    };
 
     SwitchRadio.prototype.swap = function(v) {
       v = v !== void 0 ? v : null;
       this.side = v !== null ? !v : !this.side;
-      _privados.toggle.bind(this)();
+      _SPL.onToggle.bind(this)();
     };
 
     SwitchRadio.prototype.reset = function() {
       this.side = null;
-      _privados.toggle.bind(this)();
+      _SPL.onToggle.bind(this)();
     };
 
     SwitchRadio.prototype.getSizes = function() {
@@ -3220,6 +3236,7 @@ It is a plugin that show `radios buttons` like switch
         'knob': knob.clientWidth
       };
       document.body.removeChild(clone);
+      clone = null;
       return sizes;
     };
 
@@ -3228,9 +3245,10 @@ It is a plugin that show `radios buttons` like switch
       if (this.side === null) {
         v = this.side;
       } else {
-        v = this.side ? this.radios[1].value : this.radios[0].value;
+        v = this.side ? this.radios[1].title : this.radios[0].title;
       }
       this.sFlex.setAttribute('aria-valuenow', v);
+      this.sFlex.setAttribute('aria-valuetext', v);
     };
 
     SwitchRadio.prototype.captionsActive = function() {
@@ -3254,8 +3272,23 @@ It is a plugin that show `radios buttons` like switch
       }
     };
 
+    SwitchRadio.prototype.destroy = function() {
+      var style;
+      style = this.container.style;
+      style.width = '';
+      this.container.removeChild(this.sFlex);
+      this.container.removeAttribute("data-sr" + this.container.srGUID);
+      delete this.container.srGUID;
+      this.sFlex = null;
+    };
+
     return SwitchRadio;
 
-  })();
+  })(EventEmitter);
+  SwitchRadio.data = function(el) {
+    var id;
+    id = el && el.srGUID;
+    return id && instances[id];
+  };
   return SwitchRadio;
 });

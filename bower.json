@@ -1,8 +1,8 @@
 {
   "name": "switch-radio",
-  "title": "Switch Radio",
-  "description": "It is a plugin that show radios buttons like switch",
-  "version": "0.4.5",
+  "title": "Slide Switch Radio",
+  "description": "It is a plugin that show radios buttons like slide switch",
+  "version": "0.5.0",
   "author": "Thiago Lagden",
   "keyword": [
     "custom",
@@ -11,26 +11,23 @@
     "radio"
   ],
   "main": [
-    "switch.js",
-    "switch.css"
+    "dist/switch.js",
+    "dist/switch.css"
   ],
   "ignore": [
-    "examples",
     "src",
-    "lib",
+    "examples",
+    "dist/lib",
     "package.json",
     "Gulpfile.js",
-    "*.coffee",
-    "*.md",
-    "*.sass",
+    "Gulpfile.coffee",
+    "README.md",
     ".*"
   ],
   "dependencies": {
     "hammerjs": "~2.0.1",
     "get-style-property": "desandro/get-style-property#~1.0.3",
-    "eventEmitter": "~4.2.7"
-  },
-  "devDependencies": {
+    "eventEmitter": "~4.2.7",
     "classie": "~1.0.1"
   }
 }

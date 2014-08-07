@@ -1,7 +1,7 @@
 ###
 switch.js - SwitchRadio
 
-It is a plugin that show `radios buttons` like switch
+It is a plugin that show `radios buttons` like slide switch
 
 @author      Thiago Lagden <lagden [at] gmail.com>
 @copyright   Author
@@ -10,9 +10,9 @@ It is a plugin that show `radios buttons` like switch
 ((root, factory) ->
   if typeof define is "function" and define.amd
     define [
-        'get-style-property/get-style-property',
-        'classie/classie',
-        'eventEmitter/EventEmitter',
+        'get-style-property/get-style-property'
+        'classie/classie'
+        'eventEmitter/EventEmitter'
         'hammerjs/hammer'
       ], factory
   else
@@ -46,193 +46,172 @@ It is a plugin that show `radios buttons` like switch
       return
     )()
 
+  # Transform property cross-browser
   transformProperty = getStyleProperty 'transform'
 
-  _privados =
-      # Template
-      getTemplate: ->
-        [
-          '<div class="switchRadio__flex" '
-          'tabindex="0" role="switch" aria-valueon="{valueon}" '
-          'aria-valueoff="{valueoff}" aria-valuenow="{valuenow}" '
-          'aria-labeledby="{labeledby}" aria-required="{required}">'
-          '<div class="switchRadio__caption switchRadio__caption--on">'
-          '{captionOn}</div>'
-          '<div class="switchRadio__knob"></div>'
-          '<div class="switchRadio__caption switchRadio__caption--off">'
-          '{captionOff}</div>'
-          '</div>'
-        ].join ''
+  # globally unique identifiers
+  GUID = 0
 
-      # Event Handlers
-      toggle: ->
-        if @side isnt null
-          @active = true
-          @transform.translate.x = if @side then -@size else 0
+  # internal store of all SwitchRadio intances
+  instances = {}
 
-          if @side
-            @radios[0].removeAttribute 'checked'
-            @radios[0].checked = false
-            @radios[1].setAttribute 'checked', ''
-            @radios[1].checked = true
-          else
-            @radios[1].removeAttribute 'checked'
-            @radios[1].checked = false
-            @radios[0].setAttribute 'checked', ''
-            @radios[0].checked = true
+  _SPL =
+    # Event Handlers
+    onToggle: ->
 
-        else
-          @active = false
-          @transform.translate.x = -@size / 2
-          for radio in @radios
-            radio.removeAttribute 'checked'
-            radio.checked = false
+      @toggle()
+      @.emitEvent 'toggle', @eventToggleParam
+      for radio in @radios when radio.checked
+        radio.dispatchEvent @eventChange
+      return
 
-        @ariaAttr()
-        @captionsActive()
-        @requestUpdate()
+    onStart: (event) ->
+      @sFlex.focus()
+      return
 
-        @container.dispatchEvent @eventToggle
-        radio.dispatchEvent @eventChange for radio in @radios when radio.checked
-        return
+    onMove: (event) ->
+      if @side == null
+        v = -@size/2 + event.deltaX
+      else
+        v = if @side then -@size + event.deltaX else event.deltaX
 
-      onStart: (event) ->
-        @sFlex.focus()
-        return
+      @transform.translate.x = Math.min 0, Math.max -@size, v
+      classie.add @sFlex, 'is-dragging'
+      @active = true
+      @captionsActive()
+      @requestUpdate()
+      return
 
-      onMove: (event) ->
-        if @side == null
-          v = -@size/2 + event.deltaX
-        else
-          v = if @side then -@size + event.deltaX else event.deltaX
+    onEnd: (event) ->
+      @side = Boolean Math.abs(@transform.translate.x) > (@size / 2)
+      classie.remove @sFlex, 'is-dragging'
+      _SPL.onToggle.bind(@)()
+      return
 
-        @transform.translate.x = Math.min 0, Math.max -@size, v
-        classie.add @sFlex, 'is-dragging'
-        @active = true
-        @captionsActive()
-        @requestUpdate()
-        return
+    onTap: (event) ->
+      if @side == null
+        rect = @container.getBoundingClientRect()
+        center = rect.left + (rect.width / 2)
+        @side = event.center.x < center
+      else
+        @side = !@side
 
-      onEnd: (event) ->
-        @side = Boolean Math.abs(@transform.translate.x) > (@size / 2)
-        classie.remove @sFlex, 'is-dragging'
-        _privados.toggle.bind(@)()
-        return
+      _SPL.onToggle.bind(@)()
+      return
 
-      onTap: (event) ->
-        if @side == null
-          rect = @container.getBoundingClientRect()
-          center = rect.left + (rect.width / 2)
-          @side = event.center.x < center
-        else
+    onKeydown: (event) ->
+      switch event.keyCode
+        when @keyCodes.space
           @side = !@side
+          _SPL.onToggle.bind(@)()
 
-        _privados.toggle.bind(@)()
-        return
+        when @keyCodes.right
+          @side = false
+          _SPL.onToggle.bind(@)()
 
-      onKeydown: (event) ->
-        switch event.keyCode
-          when @keyCodes.space
-            @side = !@side
-            _privados.toggle.bind(@)()
+        when @keyCodes.left
+          @side = true
+          _SPL.onToggle.bind(@)()
+      return
 
-          when @keyCodes.right
-            @side = false
-            _privados.toggle.bind(@)()
+    # Template
+    getTemplate: ->
+      [
+        '<div class="switchRadio__flex" '
+        'tabindex="0" role="slider" '
+        'aria-valuemin="{valuemin}" aria-valuemax="{valuemax}" '
+        'aria-valuetext="{valuetext}" aria-valuenow="{valuenow}" '
+        'aria-labeledby="{labeledby}" aria-required="{required}">'
+        '<div class="switchRadio__caption switchRadio__caption--on">'
+        '{captionOn}</div>'
+        '<div class="switchRadio__knob"></div>'
+        '<div class="switchRadio__caption switchRadio__caption--off">'
+        '{captionOff}</div>'
+        '</div>'
+      ].join ''
 
-          when @keyCodes.left
-            @side = true
-            _privados.toggle.bind(@)()
-        return
+    build: () ->
+      captionOn = captionOff = ''
 
-      build: () ->
-        captionOn = captionOff = ''
+      labels = @container.getElementsByTagName 'label'
+      if labels.length == 2
+        captionOn  = labels[0].textContent
+        captionOff = labels[1].textContent
+      else
+        console.warn '✖ No labels'
 
-        labels = @container.getElementsByTagName 'label'
-        if labels.length == 2
-          captionOn  = labels[0].textContent
-          captionOff = labels[1].textContent
-        else
-          console.warn '✖ No labels'
+      # Template Render
+      r =
+        'captionOn'  : captionOn
+        'captionOff' : captionOff
+        'valuemax'    : @aria['aria-valuemax']
+        'valuemin'   : @aria['aria-valuemin']
+        'valuenow'   : @aria['aria-valuenow']
+        'labeledby'  : @aria['aria-labeledby']
+        'required'   : @aria['aria-required']
 
-        # Template Render
-        r =
-          'captionOn'  : captionOn
-          'captionOff' : captionOff
-          'valueon'    : @aria['aria-valueon']
-          'valueoff'   : @aria['aria-valueoff']
-          'valuenow'   : @aria['aria-valuenow']
-          'labeledby'  : @aria['aria-labeledby']
-          'required'   : @aria['aria-required']
+      content = @template.replace /\{(.*?)\}/g, (a, b) ->
+        return r[b]
 
-        content = @template.replace /\{(.*?)\}/g, (a, b) ->
-          return r[b]
+      @container.insertAdjacentHTML 'afterbegin', content
 
-        @container.insertAdjacentHTML 'afterbegin', content
+      # Size elements
+      @sFlex = @container.querySelector '.switchRadio__flex'
+      @sOn   = @sFlex.querySelector '.switchRadio__caption--on'
+      @sOff  = @sFlex.querySelector '.switchRadio__caption--off'
+      @knob  = @sFlex.querySelector '.switchRadio__knob'
 
-        # Size elements
-        @sFlex = @container.querySelector '.switchRadio__flex'
-        @sOn   = @sFlex.querySelector '.switchRadio__caption--on'
-        @sOff  = @sFlex.querySelector '.switchRadio__caption--off'
-        @knob  = @sFlex.querySelector '.switchRadio__knob'
+      sizes = @getSizes()
 
-        sizes = @getSizes()
+      @size = Math.max sizes.sOn, sizes.sOff
 
-        @size = Math.max sizes.sOn, sizes.sOff
+      @sOn.style.width       = @sOff.style.width = "#{@size}px"
+      @sFlex.style.width     = (@size * 2) + sizes.knob + 'px'
+      @container.style.width = @size + sizes.knob + 'px'
 
-        @sOn.style.width       = @sOff.style.width = "#{@size}px"
-        @sFlex.style.width     = (@size * 2) + sizes.knob + 'px'
-        @container.style.width = @size + sizes.knob + 'px'
+      # Drag
+      pan = new Hammer.Pan direction: Hammer.DIRECTION_HORIZONTAL
+      tap = new Hammer.Tap
 
-        # Drag
-        pan = new Hammer.Pan direction: Hammer.DIRECTION_HORIZONTAL
-        tap = new Hammer.Tap
+      mc = new Hammer.Manager @sFlex,
+        dragLockToAxis: true
+        dragBlockHorizontal: true
+        preventDefault: true
 
-        mc = new Hammer.Manager @sFlex,
-          dragLockToAxis: true
-          dragBlockHorizontal: true
-          preventDefault: true
+      mc.add tap
+      mc.add pan
+      mc.on 'tap'       , _SPL.onTap.bind(@)
+      mc.on 'panstart'  , _SPL.onStart.bind(@)
+      mc.on 'pan'       , _SPL.onMove.bind(@)
+      mc.on 'panend'    , _SPL.onEnd.bind(@)
+      mc.on 'pancancel' , _SPL.onEnd.bind(@)
 
-        mc.add tap
-        mc.add pan
-        mc.on 'tap'       , _privados.onTap.bind(@)
-        mc.on 'panstart'  , _privados.onStart.bind(@)
-        mc.on 'pan'       , _privados.onMove.bind(@)
-        mc.on 'panend'    , _privados.onEnd.bind(@)
-        mc.on 'pancancel' , _privados.onEnd.bind(@)
+      # Keyboard
+      @sFlex.addEventListener 'keydown', _SPL.onKeydown.bind(@), false
 
-        # Keyboard
-        @sFlex.addEventListener 'keydown', _privados.onKeydown.bind(@), false
+      # Event toggle param
+      @eventToggleParam = [
+        'instance' : @
+        'container': @container
+        'radios'   : @radios
+        'handler'  : @sFlex
+      ]
 
-        # Custom events
-        @eventToggle = new CustomEvent 'switch:toggle',
-          'detail':
-            'radios': @radios
-            'handler': @sFlex
+      # Event change
+      @eventChange = new CustomEvent 'change'
 
-        # Observer
-        # @observer = new MutationObserver (mutations) ->
-        #   mutations.forEach (mutation) ->
-        #     console.log mutation
-        #     return
+      # Init
+      _SPL.onToggle.bind(@)()
+      return
 
-        # @observer.observe @sFlex, attributes: true
-
-        # for radio in @radios
-        #   @observer.observe radio, attributes: true
-
-        # Init
-        _privados.toggle.bind(@)()
-        return
-
-      initCheck: (container) ->
-        regex = /data-switcher-(\d+)/i
-        attribs = container.attributes
-        data = attrib.name for attrib in attribs when regex.test attrib.name
-        return true if !!data
+    initCheck: (container) ->
+      regex = /data-sr(\d+)/i
+      attribs = container.attributes
+      data = attrib.name for attrib in attribs when regex.test attrib.name
+      return true if !!data
 
   # Master
-  class SwitchRadio
+  class SwitchRadio extends EventEmitter
     constructor: (container, required, labeledby) ->
       # Self instance
       if false is (@ instanceof SwitchRadio)
@@ -242,29 +221,29 @@ It is a plugin that show `radios buttons` like switch
       required = required || false
 
       # Check if component was initialized
-      if _privados.initCheck container
+      if _SPL.initCheck container
         console.warn 'The component has been initialized.'
         return null
       else
-        @token = 'sr' + String(Date.now() * Math.random()).split('.')[0]
-        container.setAttribute 'data-token', @token
-        container.setAttribute "data-switcher-#{@token}", ''
-
-      # Custom Event
-      @eventChange = new CustomEvent 'change'
-
-      # Container
-      @container = container
+        id = ++GUID
+        # Container
+        @container = container
+        @container.srGUID = id
+        instances[id] = @
+        container.setAttribute "data-sr#{id}", ''
 
       # Radios
       @radios = []
       radios = @container.getElementsByTagName 'input'
-      @radios.push radio for radio in radios when radio.type == 'radio'
+      for radio, idx in radios when radio.type == 'radio'
+        radio.setAttribute 'data-side', idx
+        @radios.push radio
+
       if @radios.length != 2
         console.err '✖ No radios'
         return null
 
-      @template = _privados.getTemplate()
+      @template = _SPL.getTemplate()
       @size = 0
 
       @side = null
@@ -280,31 +259,60 @@ It is a plugin that show `radios buttons` like switch
           x: 0
 
       @aria =
-        'aria-valueon'   : @radios[0].value
-        'aria-valueoff'  : @radios[1].value
+        'aria-valuemax'   : @radios[0].title
+        'aria-valuemin'  : @radios[1].title
+        'aria-valuetext' : null
         'aria-valuenow'  : null
         'aria-labeledby' : labeledby
         'aria-required'  : required
 
       @keyCodes =
-        'enter' : 13
         'space' : 32
         'left'  : 37
-        'up'    : 38
         'right' : 39
-        'down'  : 40
 
-      _privados.build.bind(@)()
+      _SPL.build.bind(@)()
 
-    swap: (v)->
+    toggle: (v) ->
+
+      @side = if v isnt undefined then v else @side
+
+      if @side isnt null
+        @active = true
+        @transform.translate.x = if @side then -@size else 0
+
+        if @side
+          @radios[0].removeAttribute 'checked'
+          @radios[0].checked = false
+          @radios[1].setAttribute 'checked', ''
+          @radios[1].checked = true
+        else
+          @radios[1].removeAttribute 'checked'
+          @radios[1].checked = false
+          @radios[0].setAttribute 'checked', ''
+          @radios[0].checked = true
+
+      else
+        @active = false
+        @transform.translate.x = -@size / 2
+        for radio in @radios
+          radio.removeAttribute 'checked'
+          radio.checked = false
+
+      @ariaAttr()
+      @captionsActive()
+      @requestUpdate()
+      return
+
+    swap: (v) ->
       v = if v isnt undefined then v else null
       @side = if v isnt null then !v else !@side
-      _privados.toggle.bind(@)()
+      _SPL.onToggle.bind(@)()
       return
 
     reset: ->
       @side = null
-      _privados.toggle.bind(@)()
+      _SPL.onToggle.bind(@)()
       return
 
     getSizes: ->
@@ -324,15 +332,18 @@ It is a plugin that show `radios buttons` like switch
         'sOn': sOn.clientWidth
         'sOff': sOff.clientWidth
         'knob': knob.clientWidth
+
       document.body.removeChild clone
+      clone = null
       return sizes
 
     ariaAttr: ->
       if @side == null
         v = @side
       else
-        v = if @side then @radios[1].value else @radios[0].value
+        v = if @side then @radios[1].title else @radios[0].title
       @sFlex.setAttribute 'aria-valuenow', v
+      @sFlex.setAttribute 'aria-valuetext', v
       return
 
     captionsActive: ->
@@ -352,5 +363,24 @@ It is a plugin that show `radios buttons` like switch
         @ticking = true
         requestAnimationFrame @updateTransform.bind(@)
       return
+
+    destroy: ->
+      style = @container.style
+      style.width = ''
+      @container.removeChild @sFlex
+      @container.removeAttribute "data-sr#{@container.srGUID}"
+      delete @container.srGUID
+      @sFlex = null
+      return
+
+  # https://github.com/metafizzy/outlayer/blob/master/outlayer.js#L887
+  #
+  # get SwitchRadio instance from element
+  # @param {Element} el
+  # @return {SwitchRadio}
+  #
+  SwitchRadio.data = (el) ->
+    id = el and el.srGUID
+    return id and instances[id]
 
   return SwitchRadio
