@@ -27,7 +27,8 @@
   ],
   "dependencies": {
     "hammerjs": "~2.0.1",
-    "get-style-property": "desandro/get-style-property#~1.0.3"
+    "get-style-property": "desandro/get-style-property#~1.0.3",
+    "eventEmitter": "~4.2.7"
   },
   "devDependencies": {
     "classie": "~1.0.1"

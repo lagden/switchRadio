@@ -1,29 +1,72 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf8"><meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><meta name="description" content="Exemplo"><meta name="author" content="Thiago Lagden"><link rel="stylesheet" type="text/css" href="switch.css"><style>.label {
-    margin-bottom: 5px
-}
-
-.mar-b-20 {
-    margin-bottom: 20px
-}</style></head><title>Exemplo</title><body><h1>Exemplo</h1><form id="frm" action="index.html" method="GET"><div class="mar-b-20"><div id="labelSexo" class="label">Qual é o sexo?</div><div class="switchRadio"><label for="SexoM">Masculino</label><input id="SexoM" type="radio" title="Masculino" name="sexo" value="M"><label for="SexoF">Feminino</label><input id="SexoF" type="radio" title="Feminino" name="sexo" value="F"></div></div><div class="mar-b-20"><div id="labelSwitch" class="label">Você achou esse switch bacana?</div><div class="switchRadio"><label for="sim">Sim</label><input id="sim" type="radio" title="Sim" name="switch" value="S" checked><label for="nao">Não</label><input id="nao" type="radio" title="Não" name="switch" value="N"></div></div><button type="submit">OK</button><button type="reset">Reset</button></form><script src="switch.pkg.min.js"></script><script>var cacheSwitches = [];
-[].forEach.call(document.querySelectorAll('.switchRadio'), function(el, idx, arr) {
-    cacheSwitches.push(new SwitchRadio(el, false, el.previousElementSibling.id));
-    el.addEventListener('switch:toggle', function(event) {
-        for (var i = 0, len = event.detail.radios.length; i < len; i++) {
-            var r = event.detail.radios[i];
-            console.log('switch:toggle', r.id, r.checked);
-        }
-    });
-    
-    //- [].forEach.call(el.querySelectorAll('input[type=radio]'), function(radio) {
-    //-     radio.addEventListener('change', function(event) {
-    //-         console.log(event.currentTarget);
-    //-     });
-    //- });
-});
-
-var frm = document.querySelector('#frm');
-frm.addEventListener('reset', function(event) {
-    for (var i = 0, len = cacheSwitches.length; i < len; i++) {
-        cacheSwitches[i].reset();
-    }
-});</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Exemplo">
+    <meta name="author" content="Thiago Lagden">
+    <link rel="stylesheet" type="text/css" href="switch.css">
+    <style>
+      .label {
+          margin-bottom: 5px
+      }
+      
+      .mar-b-20 {
+          margin-bottom: 20px
+      }
+    </style>
+  </head>
+  <title>Exemplo</title>
+  <body>
+    <h1>Exemplo</h1>
+    <form id="frm" action="index.html" method="GET">
+      <div class="mar-b-20">
+        <div id="labelSexo" class="label">Qual é o sexo?</div>
+        <div class="switchRadio">
+          <label for="SexoM">Masculino</label>
+          <input id="SexoM" type="radio" title="Masculino" name="sexo" value="M">
+          <label for="SexoF">Feminino</label>
+          <input id="SexoF" type="radio" title="Feminino" name="sexo" value="F">
+        </div>
+      </div>
+      <div class="mar-b-20">
+        <div id="labelSwitch" class="label">Você achou esse switch bacana?</div>
+        <div class="switchRadio">
+          <label for="sim">Sim</label>
+          <input id="sim" type="radio" title="Sim" name="switch" value="S" checked>
+          <label for="nao">Não</label>
+          <input id="nao" type="radio" title="Não" name="switch" value="N">
+        </div>
+      </div>
+      <button type="submit">OK</button>
+      <button type="reset">Reset</button>
+    </form>
+    <script src="switch.pkg.js"></script>
+    <script>
+      var cacheSwitches = [];
+      [].forEach.call(document.querySelectorAll('.switchRadio'), function(el, idx, arr) {
+          cacheSwitches.push(new SwitchRadio(el, false, el.previousElementSibling.id));
+          el.addEventListener('switch:toggle', function(event) {
+              for (var i = 0, len = event.detail.radios.length; i < len; i++) {
+                  var r = event.detail.radios[i];
+                  console.log('switch:toggle', r.id, r.checked);
+              }
+          });
+          
+          //- [].forEach.call(el.querySelectorAll('input[type=radio]'), function(radio) {
+          //-     radio.addEventListener('change', function(event) {
+          //-         console.log(event.currentTarget);
+          //-     });
+          //- });
+      });
+      
+      var frm = document.querySelector('#frm');
+      frm.addEventListener('reset', function(event) {
+          for (var i = 0, len = cacheSwitches.length; i < len; i++) {
+              cacheSwitches[i].reset();
+          }
+      });
+    </script>
+  </body>
+</html>

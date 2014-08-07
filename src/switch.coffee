@@ -9,29 +9,42 @@ It is a plugin that show `radios buttons` like switch
 
 ((root, factory) ->
   if typeof define is "function" and define.amd
-    define ['get-style-property/get-style-property', 'classie/classie', 'hammerjs/hammer'], factory
+    define [
+        'get-style-property/get-style-property',
+        'classie/classie',
+        'eventEmitter/EventEmitter',
+        'hammerjs/hammer'
+      ], factory
   else
-    root.SwitchRadio = factory root.getStyleProperty, root.classie, root.Hammer
+    root.SwitchRadio = factory root.getStyleProperty,
+                               root.classie,
+                               root.EventEmitter,
+                               root.Hammer
   return
-) @, (getStyleProperty, classie, Hammer) ->
+) @, (getStyleProperty, classie, EventEmitter, Hammer) ->
 
   'use strict'
 
-  # CustomEvent() constructor functionality in Internet Explorer 9 and 10
-  (->
-    CustomEvent = (event, params) ->
-      params = params or
-        bubbles: false
-        cancelable: false
-        detail: undefined
+  # CustomEvent() constructor functionality in Internet Explorer
+  unless window.CustomEvent
+    (->
+      CustomEvent = (event, params) ->
+        params = params or
+          bubbles: false
+          cancelable: false
+          detail: undefined
 
-      evt = document.createEvent "CustomEvent"
-      evt.initCustomEvent event, params.bubbles, params.cancelable, params.detail
-      return evt
-    CustomEvent:: = window.Event::
-    window.CustomEvent = CustomEvent
-    return
-  )()
+        evt = document.createEvent "CustomEvent"
+        evt.initCustomEvent event,
+                            params.bubbles,
+                            params.cancelable,
+                            params.detail
+        return evt
+
+      CustomEvent:: = window.Event::
+      window.CustomEvent = CustomEvent
+      return
+    )()
 
   transformProperty = getStyleProperty 'transform'
 
@@ -39,16 +52,21 @@ It is a plugin that show `radios buttons` like switch
       # Template
       getTemplate: ->
         [
-          '<div class="switchRadio__flex" tabindex="0" role="switch" aria-valueon="{valueon}" aria-valueoff="{valueoff}" aria-valuenow="{valuenow}" aria-labeledby="{labeledby}" aria-required="{required}">'
-          '<div class="switchRadio__caption switchRadio__caption--on">{captionOn}</div>'
+          '<div class="switchRadio__flex" '
+          'tabindex="0" role="switch" aria-valueon="{valueon}" '
+          'aria-valueoff="{valueoff}" aria-valuenow="{valuenow}" '
+          'aria-labeledby="{labeledby}" aria-required="{required}">'
+          '<div class="switchRadio__caption switchRadio__caption--on">'
+          '{captionOn}</div>'
           '<div class="switchRadio__knob"></div>'
-          '<div class="switchRadio__caption switchRadio__caption--off">{captionOff}</div>'
+          '<div class="switchRadio__caption switchRadio__caption--off">'
+          '{captionOff}</div>'
           '</div>'
         ].join ''
 
       # Event Handlers
       toggle: ->
-        if @side != null
+        if @side isnt null
           @active = true
           @transform.translate.x = if @side then -@size else 0
 
@@ -154,16 +172,16 @@ It is a plugin that show `radios buttons` like switch
 
         # Size elements
         @sFlex = @container.querySelector '.switchRadio__flex'
-        @sOn   = @container.querySelector '.switchRadio__flex > .switchRadio__caption--on'
-        @sOff  = @container.querySelector '.switchRadio__flex > .switchRadio__caption--off'
-        @knob  = @container.querySelector '.switchRadio__flex > .switchRadio__knob'
+        @sOn   = @sFlex.querySelector '.switchRadio__caption--on'
+        @sOff  = @sFlex.querySelector '.switchRadio__caption--off'
+        @knob  = @sFlex.querySelector '.switchRadio__knob'
 
         sizes = @getSizes()
 
         @size = Math.max sizes.sOn, sizes.sOff
 
-        @sOn.style.width = @sOff.style.width = "#{@size}px"
-        @sFlex.style.width = (@size * 2) + sizes.knob + 'px'
+        @sOn.style.width       = @sOff.style.width = "#{@size}px"
+        @sFlex.style.width     = (@size * 2) + sizes.knob + 'px'
         @container.style.width = @size + sizes.knob + 'px'
 
         # Drag
@@ -217,7 +235,8 @@ It is a plugin that show `radios buttons` like switch
   class SwitchRadio
     constructor: (container, required, labeledby) ->
       # Self instance
-      return new SwitchRadio(container, required, labeledby) if false is (@ instanceof SwitchRadio)
+      if false is (@ instanceof SwitchRadio)
+        return new SwitchRadio(container, required, labeledby)
 
       labeledby = labeledby || null
       required = required || false
@@ -227,7 +246,7 @@ It is a plugin that show `radios buttons` like switch
         console.warn 'The component has been initialized.'
         return null
       else
-        @token = 'sr' + String(new Date().getTime() * Math.random()).split('.')[0]
+        @token = 'sr' + String(Date.now() * Math.random()).split('.')[0]
         container.setAttribute 'data-token', @token
         container.setAttribute "data-switcher-#{@token}", ''
 
@@ -276,7 +295,6 @@ It is a plugin that show `radios buttons` like switch
         'down'  : 40
 
       _privados.build.bind(@)()
-      return
 
     swap: (v)->
       v = if v isnt undefined then v else null
@@ -292,11 +310,16 @@ It is a plugin that show `radios buttons` like switch
     getSizes: ->
       clone = @container.cloneNode true
       clone.style.visibility = 'hidden'
-      clone.style.position = 'absolute'
+      clone.style.position   = 'absolute'
       document.body.appendChild clone
-      sOn   = clone.querySelector '.switchRadio__flex > .switchRadio__caption--on'
-      sOff  = clone.querySelector '.switchRadio__flex > .switchRadio__caption--off'
-      knob  = clone.querySelector '.switchRadio__flex > .switchRadio__knob'
+
+      sOnSelector  = '.switchRadio__flex > .switchRadio__caption--on'
+      sOffSelector = '.switchRadio__flex > .switchRadio__caption--off'
+      knobSelector = '.switchRadio__flex > .switchRadio__knob'
+      sOn  = clone.querySelector sOnSelector
+      sOff = clone.querySelector sOffSelector
+      knob = clone.querySelector knobSelector
+
       sizes =
         'sOn': sOn.clientWidth
         'sOff': sOff.clientWidth
@@ -319,7 +342,7 @@ It is a plugin that show `radios buttons` like switch
       return
 
     updateTransform: ->
-      value = ['translate3d(' + @transform.translate.x + 'px, 0, 0)']
+      value = ["translate3d(#{@transform.translate.x}px, 0, 0)"]
       @sFlex.style[transformProperty] = value.join " "
       @ticking = false
       return

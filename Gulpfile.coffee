@@ -1,14 +1,18 @@
 'use strict'
 
-gulp       = require 'gulp'
-sass       = require 'gulp-ruby-sass'
-prefix     = require 'gulp-autoprefixer'
-jade       = require 'gulp-jade'
-coffee     = require 'gulp-coffee'
-coffeelint = require 'gulp-coffeelint'
-uglify     = require 'gulp-uglifyjs'
-filter     = require 'gulp-filter'
-util       = require 'gulp-util'
+gulp        = require 'gulp'
+prefix      = require 'gulp-autoprefixer'
+coffee      = require 'gulp-coffee'
+coffeelint  = require 'gulp-coffeelint'
+concat      = require 'gulp-concat'
+filter      = require 'gulp-filter'
+jade        = require 'gulp-jade'
+sass        = require 'gulp-ruby-sass'
+uglify      = require 'gulp-uglifyjs'
+util        = require 'gulp-util'
+
+del         = require 'del'
+runSequence = require 'run-sequence'
 
 browserSync = require 'browser-sync'
 reload      = browserSync.reload
@@ -25,84 +29,112 @@ AUTOPREFIXER_BROWSERS = [
   'bb >= 10'
 ]
 
-sources =
-  sass   : './src/*.sass'
-  jade   : './src/examples/*.jade'
-  coffee : './src/*.coffee'
-  js     : [
-    './lib/vendor/get-style-property/get-style-property.js'
-    './lib/vendor/classie/classie.js'
-    './lib/vendor/hammerjs/hammer.js'
-    './switch.js'
-  ]
+map =
+  jade:
+    src: 'src/*.jade'
+    dest: 'examples/'
 
-destinations =
-  sass     : './'
-  jade     : './examples/'
-  coffee   : './'
-  js       : './'
-  prefixer : './'
+  sass:
+    src: 'src/*.sass'
+    dest: 'dist/'
+
+  clean:
+    src: 'dist/{*.css,*.js,*.map}'
+
+  coffee:
+    src: 'src/*.coffee'
+    dest: 'dist/'
+
+  pkg:
+    src: [
+      'dist/lib/get-style-property/get-style-property.js'
+      'dist/lib/classie/classie.js'
+      'dist/lib/eventEmitter/EventEmitter.js'
+      'dist/lib/hammerjs/hammer.js'
+      'dist/switch.js'
+    ]
+    out: 'switch.pkg.js'
+    dest: 'dist/'
+
+  uglify:
+    src:
+      file: 'dist/switch.js'
+      pkg: 'dist/switch.pkg.js'
+    out:
+      file: 'switch.min.js'
+      pkg: 'switch.pkg.min.js'
+    dest: 'dist/'
+
+gulp.task 'jade', ->
+  gulp.src map.jade.src
+    .pipe jade pretty: true
+    .pipe gulp.dest map.jade.dest
+    .pipe reload stream: true
 
 gulp.task 'sass', ->
-  gulp.src sources.sass
+  gulp.src map.sass.src
     .pipe sass
       trace         : true
       sourcemap     : true
-      sourcemapPath : '../'
+      sourcemapPath : '../dist'
       style         : 'compressed'
       noCache       : true
-    .pipe prefix AUTOPREFIXER_BROWSERS,
-      map: false
-    .pipe gulp.dest destinations.sass
+    .pipe prefix AUTOPREFIXER_BROWSERS
+    .pipe gulp.dest map.sass.dest
     .pipe filter '*.css'
-    .pipe reload {stream: true}
-  return
-
-gulp.task 'jade', ->
-  gulp.src sources.jade
-    .pipe jade
-      pretty: false
-    .pipe gulp.dest destinations.jade
-    .pipe reload
-      stream: true
-  return
+    .pipe reload stream: true
 
 gulp.task 'lint', ->
-  gulp.src sources.coffee
-    .pipe coffeelint(
-        max_line_length:
-            level: 'ignore'
-    )
+  gulp.src map.coffee.src
+    .pipe coffeelint()
     .pipe coffeelint.reporter()
 
 gulp.task 'coffee', ->
-  gulp.src sources.coffee
+  gulp.src map.coffee.src
     .pipe coffee(bare: true).on 'error', util.log
-    .pipe gulp.dest destinations.coffee
-    .pipe reload
-      stream: true
-  return
+    .pipe gulp.dest map.coffee.dest
+
+gulp.task 'pkg', ->
+  gulp.src map.pkg.src
+    .pipe concat map.pkg.out
+    .pipe gulp.dest map.pkg.dest
+    .pipe reload stream: true
 
 gulp.task 'uglify', ->
-  gulp.src sources.js
-    .pipe uglify 'switch.pkg.min.js',
-      outSourceMap: true
-    .pipe gulp.dest destinations.js
+  gulp.src map.uglify.src.file
+    .pipe uglify map.uglify.out.file, outSourceMap: true
+    .pipe gulp.dest map.uglify.dest
+
+  gulp.src map.uglify.src.pkg
+    .pipe uglify map.uglify.out.pkg, outSourceMap: true
+    .pipe gulp.dest map.uglify.dest
+
   return
 
 gulp.task 'watch', ->
-  gulp.watch sources.sass, ['sass']
-  gulp.watch sources.jade, ['jade']
-  gulp.watch sources.coffee, ['lint', 'coffee', 'uglify']
+  gulp.watch [map.sass.src], ['sass']
+  gulp.watch [map.coffee.src], ['scripts']
+  gulp.watch [map.jade.src], ['jade']
   return
 
-gulp.task 'default', ['sass', 'jade', 'lint', 'coffee', 'uglify']
+gulp.task 'clean', del.bind null, map.clean.src
 
-gulp.task 'server', ['default', 'watch'], ->
+gulp.task 'scripts', ->
+  runSequence 'lint', 'coffee', 'pkg'
+  return
+
+gulp.task 'default', ->
+  runSequence 'clean', 'jade', 'sass', 'scripts', 'uglify'
+  return
+
+gulp.task 'server', ->
+  runSequence 'default', 'watch'
+  return
+
+gulp.task 'start', ['server'], ->
   browserSync
+    notify: true
     port: 8182
     server:
-      baseDir: [
-        'examples', './'
-      ]
+      baseDir: ['examples', 'dist']
   return
