@@ -2975,6 +2975,8 @@ var __hasProp = {}.hasOwnProperty,
     onToggle: function() {
       var radio, _i, _len, _ref;
       this.toggle();
+      this.valor = this.valorUpdate();
+      this.eventToggleParam[0].value = this.valor;
       this.emitEvent('toggle', this.eventToggleParam);
       _ref = this.radios;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -3088,7 +3090,8 @@ var __hasProp = {}.hasOwnProperty,
           'instance': this,
           'container': this.container,
           'radios': this.radios,
-          'handler': this.sFlex
+          'handler': this.sFlex,
+          'value': this.valor
         }
       ];
       this.eventChange = new CustomEvent('change');
@@ -3152,6 +3155,7 @@ var __hasProp = {}.hasOwnProperty,
       if (this.radios[1].checked && !this.radios[0].checked) {
         this.side = true;
       }
+      this.valor = this.valorUpdate();
       this.active = false;
       this.ticking = false;
       this.transform = {
@@ -3249,6 +3253,16 @@ var __hasProp = {}.hasOwnProperty,
       }
       this.sFlex.setAttribute('aria-valuenow', v);
       this.sFlex.setAttribute('aria-valuetext', v);
+    };
+
+    SwitchRadio.prototype.valorUpdate = function() {
+      var v;
+      if (this.side === null) {
+        v = this.side;
+      } else {
+        v = this.side ? this.radios[1].value : this.radios[0].value;
+      }
+      return v;
     };
 
     SwitchRadio.prototype.captionsActive = function() {

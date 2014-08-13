@@ -60,6 +60,8 @@ It is a plugin that show `radios buttons` like slide switch
     onToggle: ->
 
       @toggle()
+      @valor = @valorUpdate()
+      @eventToggleParam[0].value = @valor
       @.emitEvent 'toggle', @eventToggleParam
       for radio in @radios when radio.checked
         radio.dispatchEvent @eventChange
@@ -195,6 +197,7 @@ It is a plugin that show `radios buttons` like slide switch
         'container': @container
         'radios'   : @radios
         'handler'  : @sFlex
+        'value'    : @valor
       ]
 
       # Event change
@@ -250,6 +253,8 @@ It is a plugin that show `radios buttons` like slide switch
       @side = false if @radios[0].checked and !@radios[1].checked
       @side = true  if @radios[1].checked and !@radios[0].checked
 
+      @valor = @valorUpdate()
+
       @active = false
 
       # Animation
@@ -259,7 +264,7 @@ It is a plugin that show `radios buttons` like slide switch
           x: 0
 
       @aria =
-        'aria-valuemax'   : @radios[0].title
+        'aria-valuemax'  : @radios[0].title
         'aria-valuemin'  : @radios[1].title
         'aria-valuetext' : null
         'aria-valuenow'  : null
@@ -345,6 +350,13 @@ It is a plugin that show `radios buttons` like slide switch
       @sFlex.setAttribute 'aria-valuenow', v
       @sFlex.setAttribute 'aria-valuetext', v
       return
+
+    valorUpdate: ->
+      if @side == null
+        v = @side
+      else
+        v = if @side then @radios[1].value else @radios[0].value
+      return v
 
     captionsActive: ->
       method = if @active then 'add' else 'remove'
