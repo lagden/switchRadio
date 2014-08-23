@@ -2,7 +2,7 @@
   "name": "switch-radio",
   "title": "Slide Switch Radio",
   "description": "It is a plugin that show radios buttons like slide switch",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "author": "Thiago Lagden",
   "keyword": [
     "custom",

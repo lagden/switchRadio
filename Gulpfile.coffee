@@ -130,5 +130,10 @@ gulp.task 'start', ->
   return
 
 gulp.task 'default', ->
-  runSequence 'clean', ['jade', 'sass'], 'lint', 'coffee', 'pkg', ['uglify-file', 'uglify-pkg']
+  runSequence 'clean',
+              ['jade', 'sass'],
+              'lint',
+              'coffee',
+              'pkg',
+              ['uglify-file', 'uglify-pkg']
   return

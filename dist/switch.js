@@ -19,24 +19,6 @@ var __hasProp = {}.hasOwnProperty,
 })(this, function(getStyleProperty, classie, EventEmitter, Hammer) {
   'use strict';
   var GUID, SwitchRadio, instances, transformProperty, _SPL;
-  if (!window.CustomEvent) {
-    (function() {
-      var CustomEvent;
-      CustomEvent = function(event, params) {
-        var evt;
-        params = params || {
-          bubbles: false,
-          cancelable: false,
-          detail: void 0
-        };
-        evt = document.createEvent("CustomEvent");
-        evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
-        return evt;
-      };
-      CustomEvent.prototype = window.Event.prototype;
-      window.CustomEvent = CustomEvent;
-    })();
-  }
   transformProperty = getStyleProperty('transform');
   GUID = 0;
   instances = {};

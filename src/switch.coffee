@@ -25,27 +25,6 @@ It is a plugin that show `radios buttons` like slide switch
 
   'use strict'
 
-  # CustomEvent() constructor functionality in Internet Explorer
-  unless window.CustomEvent
-    (->
-      CustomEvent = (event, params) ->
-        params = params or
-          bubbles: false
-          cancelable: false
-          detail: undefined
-
-        evt = document.createEvent "CustomEvent"
-        evt.initCustomEvent event,
-                            params.bubbles,
-                            params.cancelable,
-                            params.detail
-        return evt
-
-      CustomEvent:: = window.Event::
-      window.CustomEvent = CustomEvent
-      return
-    )()
-
   # Transform property cross-browser
   transformProperty = getStyleProperty 'transform'
 
