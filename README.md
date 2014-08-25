@@ -6,6 +6,10 @@ It is a plugin that show `radios buttons` like switch
 ## Installation
 
     bower install switch-radio
+    
+#### Warning for IE
+
+Required [CustomEvent](https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent#Polyfill) polyfill to avoid error.
 
 ## Usage
 
@@ -21,7 +25,7 @@ It is a plugin that show `radios buttons` like switch
 </div>
 ```
 
-**RequireJS**
+**AMD**
 
 ```javascript
 [].forEach.call(document.querySelectorAll('.switchRadio'), function(el, idx, arr) {
