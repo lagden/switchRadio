@@ -251,7 +251,7 @@ It is a plugin that show `radios buttons` like slide switch
         @radios.push radio
 
       if @radios.length != 2
-        console.err '✖ No radios'
+        console.error '✖ No radios'
         return
 
       # Template
