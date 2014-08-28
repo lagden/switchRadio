@@ -93,7 +93,8 @@ It is a plugin that show `radios buttons` like slide switch
       @updateValor()
       @updatePosition()
 
-      @.emitEvent 'toggle', @eventToggleParam
+      @emitToggle()
+
       for radio in @radios when radio.checked
         radio.dispatchEvent @eventChange
       return
@@ -324,6 +325,10 @@ It is a plugin that show `radios buttons` like slide switch
       @eventChange = new CustomEvent 'change'
 
       _SPL.build.call(@)
+      return
+
+    emitToggle: ->
+      @.emitEvent 'toggle', @eventToggleParam
       return
 
     swap: (v) ->
