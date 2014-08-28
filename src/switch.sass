@@ -1,42 +1,29 @@
-$times: 1
 .switchRadio
-    $height: 26px * $times
+    display: block
     font-family: Consolas, 'Liberation Mono', Courier, monospace
+    padding: 3px
     width: auto
-    height: $height
     position: relative
-    display: inline-block
     border-radius: 50em
     overflow: hidden
-    box-shadow: rgba(0, 0, 0, 0.5) 0px 1px 1px inset, rgba(255, 255, 255, 0.2) 0px 1px 0px
-    background: rgb(51, 51, 51)
-    padding-left: 3px
-    padding-right: 3px
     box-sizing: content-box
+    box-shadow: rgba(0, 0, 0, 0.5) 0px 1px 1px inset, rgba(255, 255, 255, 0.2) 0px 1px 0px
+    background-color: rgb(51, 51, 51)
     cursor: pointer
 
-    > input[type="radio"],
-    > label
-        z-index: 1
-        visibility: hidden
-        position: absolute
+    user-select: none
+    user-drag: none
+    touch-select: none
+    touch-callout: none
 
     > .switchRadio__flex
-        align-items: center
-        align-content: center
-
         display: flex
         flex-flow: row nowrap
         justify-content: center
+        align-items: center
 
-        height: $height
         position: relative
         z-index: 2
-
-        user-select: none
-        user-drag: none
-        touch-select: none
-        touch-callout: none
 
         transition: transform 0.2s linear
         transform: translate3d(0, 0, 0)
@@ -54,18 +41,18 @@ $times: 1
             font-size: 0.85em
             text-align: center
             color: white
-            padding-left: 5px
-            padding-right: 5px
-            opacity: 0
-            transition: opacity 0.8s
+            padding: 0 5px
+            opacity: 0.2
+            transition: opacity 0.3s
             &.is-active
                 opacity: 1
 
         > .switchRadio__knob
-            $knobSize: 20px * $times
+            $knobSize: 1.2em
             width: $knobSize
             height: $knobSize
             overflow: hidden
+            // pointer-events: none
             border-radius: 50%
             background: linear-gradient(rgb(246, 248, 249) 0%, rgb(229, 235, 238) 50%, rgb(215, 222, 227) 51%, rgb(245, 247, 249) 100%)
 

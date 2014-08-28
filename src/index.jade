@@ -8,12 +8,19 @@ html(lang='en')
         meta(name='author', content= 'Thiago Lagden')
         link(rel='stylesheet', type='text/css', href='switch.css')
         style.
+            body {
+                background: gray
+            }
             .label {
                 margin-bottom: 5px
             }
 
             .mar-b-20 {
                 margin-bottom: 20px
+            }
+
+            .switchRadio--big {
+                font-size: 2em
             }
     title Exemplo
     body
@@ -29,7 +36,7 @@ html(lang='en')
 
             .mar-b-20
                 #labelSwitch.label Você achou esse switch bacana?
-                .switchRadio
+                .switchRadio.switchRadio--big
                     label(for='sim') Sim
                     input#sim(type='radio', title='Sim', name='switch', value='S', checked)
                     label(for='nao') Não

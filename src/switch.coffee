@@ -47,6 +47,30 @@ It is a plugin that show `radios buttons` like slide switch
         '</div>'
       ].join ''
 
+    getSizes: ->
+      clone = @container.cloneNode true
+      clone.style.visibility = 'hidden'
+      clone.style.position   = 'absolute'
+
+      document.body.appendChild clone
+
+      sOnSelector  = '.switchRadio__flex > .switchRadio__caption--on'
+      sOffSelector = '.switchRadio__flex > .switchRadio__caption--off'
+      knobSelector = '.switchRadio__flex > .switchRadio__knob'
+
+      sOn  = clone.querySelector sOnSelector
+      sOff = clone.querySelector sOffSelector
+      knob = clone.querySelector knobSelector
+
+      sizes =
+        'sOn': sOn.clientWidth
+        'sOff': sOff.clientWidth
+        'knob': knob.clientWidth
+
+      document.body.removeChild clone
+      clone = null
+      return sizes
+
     # Event Handlers
     onToggle: ->
       @toggle()
@@ -55,13 +79,13 @@ It is a plugin that show `radios buttons` like slide switch
         radio.dispatchEvent @eventChange
       return
 
-    onStart: (event) ->
-      @sFlex.focus()
-      classie.add @sFlex, 'is-dragging'
+    onStart: (el, event) ->
+      el.focus()
+      classie.add el, 'is-dragging'
       return
 
     onMove: (event) ->
-      v = -@size/2 + event.deltaX
+      v = (-@size / 2) + event.deltaX
 
       if @ligado isnt null
         v = if @ligado then -@size + event.deltaX else event.deltaX
@@ -70,14 +94,14 @@ It is a plugin that show `radios buttons` like slide switch
       @updatePosition()
       return
 
-    onEnd: (event) ->
+    onEnd: (el, event) ->
       @ligado = Math.abs(@transform.translate.x) > (@size / 2)
-      classie.remove @sFlex, 'is-dragging'
+      classie.remove el, 'is-dragging'
       _SPL.onToggle.call(@)
       return
 
-    onTap: (event) ->
-      rect = @container.getBoundingClientRect()
+    onTap: (el, event) ->
+      rect = el.getBoundingClientRect()
       center = rect.left + (rect.width / 2)
       @ligado = event.center.x < center
 
@@ -112,6 +136,9 @@ It is a plugin that show `radios buttons` like slide switch
       radio.checked = false
       return
 
+    aria: (el) ->
+      el.setAttribute attrib, value for attrib, value of @aria
+
     build: () ->
       captionOn = captionOff = ''
 
@@ -135,23 +162,23 @@ It is a plugin that show `radios buttons` like slide switch
       # Elements and Size elements
       @elements = []
 
-      sizes = @getSizes()
+      sizes = _SPL.getSizes.call(@)
       @size = Math.max sizes.sOn, sizes.sOff
 
-      @sFlex = @container.querySelector '.switchRadio__flex'
-      @sOn   = @sFlex.querySelector '.switchRadio__caption--on'
-      @sOff  = @sFlex.querySelector '.switchRadio__caption--off'
-      @knob  = @sFlex.querySelector '.switchRadio__knob'
+      @drag  = @container.querySelector '.switchRadio__flex'
+      @sOn   = @drag.querySelector '.switchRadio__caption--on'
+      @sOff  = @drag.querySelector '.switchRadio__caption--off'
+      @knob  = @drag.querySelector '.switchRadio__knob'
 
-      @elements.push @sFlex
+      @elements.push @drag
 
       # Width
       @sOn.style.width       = @sOff.style.width = "#{@size}px"
-      @sFlex.style.width     = (@size * 2) + sizes.knob + 'px'
+      @drag.style.width      = (@size * 2) + sizes.knob + 'px'
       @container.style.width = @size + sizes.knob + 'px'
 
       # Aria
-      @sFlex.setAttribute attrib, value for attrib, value of @aria
+      _SPL.aria.call(@, @drag)
 
       # Drag and Tap
       #
@@ -163,40 +190,29 @@ It is a plugin that show `radios buttons` like slide switch
         preventDefault: true
 
       @mc.add tap
-      @mc.on 'tap'       , _SPL.onTap.bind(@)
+      @mc.on 'tap', _SPL.onTap.bind(@, @container)
 
       # Flex
       pan = new Hammer.Pan direction: Hammer.DIRECTION_HORIZONTAL
-      @mk = new Hammer.Manager @sFlex,
+      @mk = new Hammer.Manager @knob,
         dragLockToAxis: true
         dragBlockHorizontal: true
         preventDefault: true
 
       @mk.add pan
-      @mk.on 'panstart'  , _SPL.onStart.bind(@)
+      @mk.on 'panstart'  , _SPL.onStart.bind(@, @drag)
       @mk.on 'pan'       , _SPL.onMove.bind(@)
-      @mk.on 'panend'    , _SPL.onEnd.bind(@)
-      @mk.on 'pancancel' , _SPL.onEnd.bind(@)
+      @mk.on 'panend'    , _SPL.onEnd.bind(@, @drag)
+      @mk.on 'pancancel' , _SPL.onEnd.bind(@, @drag)
 
       # Keyboard
       @eventCall =
         'keydown': _SPL.onKeydown.bind(@)
 
-      @sFlex.addEventListener 'keydown', @eventCall.keydown
-
-      # Event toggle param
-      @eventToggleParam = [
-        'instance' : @
-        'container': @container
-        'radios'   : @radios
-        'value'    : @valor
-      ]
-
-      # Event change
-      @eventChange = new CustomEvent 'change'
+      @drag.addEventListener 'keydown', @eventCall.keydown
 
       # Init
-      _SPL.onToggle.bind(@)()
+      _SPL.onToggle.call(@)
       return
 
     initCheck: (container) ->
@@ -278,7 +294,17 @@ It is a plugin that show `radios buttons` like slide switch
         'aria-labeledby' : labeledby
         'aria-required'  : required
 
-      _SPL.build.bind(@)()
+      # Event toggle param
+      @eventToggleParam = [
+        'instance' : @
+        'radios'   : @radios
+        'value'    : @valor
+      ]
+
+      # Event change
+      @eventChange = new CustomEvent 'change'
+
+      _SPL.build.call(@)
 
     toggle: (v) ->
       v = v || false
@@ -308,37 +334,13 @@ It is a plugin that show `radios buttons` like slide switch
     swap: (v) ->
       @ligado = v if v?
       @ligado = !@ligado
-      _SPL.onToggle.bind(@)()
+      _SPL.onToggle.call(@)
       return
 
     reset: ->
       @ligado = null
-      _SPL.onToggle.bind(@)()
+      _SPL.onToggle.call(@)
       return
-
-    getSizes: ->
-      clone = @container.cloneNode true
-      clone.style.visibility = 'hidden'
-      clone.style.position   = 'absolute'
-
-      document.body.appendChild clone
-
-      sOnSelector  = '.switchRadio__flex > .switchRadio__caption--on'
-      sOffSelector = '.switchRadio__flex > .switchRadio__caption--off'
-      knobSelector = '.switchRadio__flex > .switchRadio__knob'
-
-      sOn  = clone.querySelector sOnSelector
-      sOff = clone.querySelector sOffSelector
-      knob = clone.querySelector knobSelector
-
-      sizes =
-        'sOn': sOn.clientWidth
-        'sOff': sOff.clientWidth
-        'knob': knob.clientWidth
-
-      document.body.removeChild clone
-      clone = null
-      return sizes
 
     isActive: ->
       method = if @active then 'add' else 'remove'
@@ -364,7 +366,7 @@ It is a plugin that show `radios buttons` like slide switch
 
     updatePosition: ->
       value = ["translate3d(#{@transform.translate.x}px, 0, 0)"]
-      @sFlex.style[transformProperty] = value.join " "
+      @drag.style[transformProperty] = value.join " "
       return
 
     destroy: ->
@@ -373,7 +375,7 @@ It is a plugin that show `radios buttons` like slide switch
         radio.removeAttribute 'data-side' for radio in @radios
 
         # Remove Event from @container
-        @sFlex.removeEventListener 'keydown', @eventCall.keydown
+        @drag.removeEventListener 'keydown', @eventCall.keydown
 
         # Destroy Hammer Events
         @mk.destroy()

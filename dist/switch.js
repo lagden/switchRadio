@@ -26,6 +26,27 @@ var __hasProp = {}.hasOwnProperty,
     getTemplate: function() {
       return ['<div class="switchRadio__flex">', '<div class="switchRadio__caption switchRadio__caption--off">', '{captionOff}</div>', '<div class="switchRadio__knob"></div>', '<div class="switchRadio__caption switchRadio__caption--on">', '{captionOn}</div>', '</div>'].join('');
     },
+    getSizes: function() {
+      var clone, knob, knobSelector, sOff, sOffSelector, sOn, sOnSelector, sizes;
+      clone = this.container.cloneNode(true);
+      clone.style.visibility = 'hidden';
+      clone.style.position = 'absolute';
+      document.body.appendChild(clone);
+      sOnSelector = '.switchRadio__flex > .switchRadio__caption--on';
+      sOffSelector = '.switchRadio__flex > .switchRadio__caption--off';
+      knobSelector = '.switchRadio__flex > .switchRadio__knob';
+      sOn = clone.querySelector(sOnSelector);
+      sOff = clone.querySelector(sOffSelector);
+      knob = clone.querySelector(knobSelector);
+      sizes = {
+        'sOn': sOn.clientWidth,
+        'sOff': sOff.clientWidth,
+        'knob': knob.clientWidth
+      };
+      document.body.removeChild(clone);
+      clone = null;
+      return sizes;
+    },
     onToggle: function() {
       var radio, _i, _len, _ref;
       this.toggle();
@@ -38,27 +59,27 @@ var __hasProp = {}.hasOwnProperty,
         }
       }
     },
-    onStart: function(event) {
-      this.sFlex.focus();
-      classie.add(this.sFlex, 'is-dragging');
+    onStart: function(el, event) {
+      el.focus();
+      classie.add(el, 'is-dragging');
     },
     onMove: function(event) {
       var v;
-      v = -this.size / 2 + event.deltaX;
+      v = (-this.size / 2) + event.deltaX;
       if (this.ligado !== null) {
         v = this.ligado ? -this.size + event.deltaX : event.deltaX;
       }
       this.transform.translate.x = Math.min(0, Math.max(-this.size, v));
       this.updatePosition();
     },
-    onEnd: function(event) {
+    onEnd: function(el, event) {
       this.ligado = Math.abs(this.transform.translate.x) > (this.size / 2);
-      classie.remove(this.sFlex, 'is-dragging');
+      classie.remove(el, 'is-dragging');
       _SPL.onToggle.call(this);
     },
-    onTap: function(event) {
+    onTap: function(el, event) {
       var center, rect;
-      rect = this.container.getBoundingClientRect();
+      rect = el.getBoundingClientRect();
       center = rect.left + (rect.width / 2);
       this.ligado = event.center.x < center;
       _SPL.onToggle.call(this);
@@ -91,8 +112,18 @@ var __hasProp = {}.hasOwnProperty,
       radio.removeAttribute('checked');
       radio.checked = false;
     },
+    aria: function(el) {
+      var attrib, value, _ref, _results;
+      _ref = this.aria;
+      _results = [];
+      for (attrib in _ref) {
+        value = _ref[attrib];
+        _results.push(el.setAttribute(attrib, value));
+      }
+      return _results;
+    },
     build: function() {
-      var attrib, captionOff, captionOn, content, labels, pan, r, sizes, tap, value, _ref;
+      var captionOff, captionOn, content, labels, pan, r, sizes, tap;
       captionOn = captionOff = '';
       labels = this.container.getElementsByTagName('label');
       if (labels.length === 2) {
@@ -110,21 +141,17 @@ var __hasProp = {}.hasOwnProperty,
       });
       this.container.insertAdjacentHTML('afterbegin', content);
       this.elements = [];
-      sizes = this.getSizes();
+      sizes = _SPL.getSizes.call(this);
       this.size = Math.max(sizes.sOn, sizes.sOff);
-      this.sFlex = this.container.querySelector('.switchRadio__flex');
-      this.sOn = this.sFlex.querySelector('.switchRadio__caption--on');
-      this.sOff = this.sFlex.querySelector('.switchRadio__caption--off');
-      this.knob = this.sFlex.querySelector('.switchRadio__knob');
-      this.elements.push(this.sFlex);
+      this.drag = this.container.querySelector('.switchRadio__flex');
+      this.sOn = this.drag.querySelector('.switchRadio__caption--on');
+      this.sOff = this.drag.querySelector('.switchRadio__caption--off');
+      this.knob = this.drag.querySelector('.switchRadio__knob');
+      this.elements.push(this.drag);
       this.sOn.style.width = this.sOff.style.width = "" + this.size + "px";
-      this.sFlex.style.width = (this.size * 2) + sizes.knob + 'px';
+      this.drag.style.width = (this.size * 2) + sizes.knob + 'px';
       this.container.style.width = this.size + sizes.knob + 'px';
-      _ref = this.aria;
-      for (attrib in _ref) {
-        value = _ref[attrib];
-        this.sFlex.setAttribute(attrib, value);
-      }
+      _SPL.aria.call(this, this.drag);
       tap = new Hammer.Tap;
       this.mc = new Hammer.Manager(this.container, {
         dragLockToAxis: true,
@@ -132,34 +159,25 @@ var __hasProp = {}.hasOwnProperty,
         preventDefault: true
       });
       this.mc.add(tap);
-      this.mc.on('tap', _SPL.onTap.bind(this));
+      this.mc.on('tap', _SPL.onTap.bind(this, this.container));
       pan = new Hammer.Pan({
         direction: Hammer.DIRECTION_HORIZONTAL
       });
-      this.mk = new Hammer.Manager(this.sFlex, {
+      this.mk = new Hammer.Manager(this.knob, {
         dragLockToAxis: true,
         dragBlockHorizontal: true,
         preventDefault: true
       });
       this.mk.add(pan);
-      this.mk.on('panstart', _SPL.onStart.bind(this));
+      this.mk.on('panstart', _SPL.onStart.bind(this, this.drag));
       this.mk.on('pan', _SPL.onMove.bind(this));
-      this.mk.on('panend', _SPL.onEnd.bind(this));
-      this.mk.on('pancancel', _SPL.onEnd.bind(this));
+      this.mk.on('panend', _SPL.onEnd.bind(this, this.drag));
+      this.mk.on('pancancel', _SPL.onEnd.bind(this, this.drag));
       this.eventCall = {
         'keydown': _SPL.onKeydown.bind(this)
       };
-      this.sFlex.addEventListener('keydown', this.eventCall.keydown);
-      this.eventToggleParam = [
-        {
-          'instance': this,
-          'container': this.container,
-          'radios': this.radios,
-          'value': this.valor
-        }
-      ];
-      this.eventChange = new CustomEvent('change');
-      _SPL.onToggle.bind(this)();
+      this.drag.addEventListener('keydown', this.eventCall.keydown);
+      _SPL.onToggle.call(this);
     },
     initCheck: function(container) {
       var attrib, attribs, data, regex, _i, _len;
@@ -242,7 +260,15 @@ var __hasProp = {}.hasOwnProperty,
         'aria-labeledby': labeledby,
         'aria-required': required
       };
-      _SPL.build.bind(this)();
+      this.eventToggleParam = [
+        {
+          'instance': this,
+          'radios': this.radios,
+          'value': this.valor
+        }
+      ];
+      this.eventChange = new CustomEvent('change');
+      _SPL.build.call(this);
     }
 
     SwitchRadio.prototype.toggle = function(v) {
@@ -278,34 +304,12 @@ var __hasProp = {}.hasOwnProperty,
         this.ligado = v;
       }
       this.ligado = !this.ligado;
-      _SPL.onToggle.bind(this)();
+      _SPL.onToggle.call(this);
     };
 
     SwitchRadio.prototype.reset = function() {
       this.ligado = null;
-      _SPL.onToggle.bind(this)();
-    };
-
-    SwitchRadio.prototype.getSizes = function() {
-      var clone, knob, knobSelector, sOff, sOffSelector, sOn, sOnSelector, sizes;
-      clone = this.container.cloneNode(true);
-      clone.style.visibility = 'hidden';
-      clone.style.position = 'absolute';
-      document.body.appendChild(clone);
-      sOnSelector = '.switchRadio__flex > .switchRadio__caption--on';
-      sOffSelector = '.switchRadio__flex > .switchRadio__caption--off';
-      knobSelector = '.switchRadio__flex > .switchRadio__knob';
-      sOn = clone.querySelector(sOnSelector);
-      sOff = clone.querySelector(sOffSelector);
-      knob = clone.querySelector(knobSelector);
-      sizes = {
-        'sOn': sOn.clientWidth,
-        'sOff': sOff.clientWidth,
-        'knob': knob.clientWidth
-      };
-      document.body.removeChild(clone);
-      clone = null;
-      return sizes;
+      _SPL.onToggle.call(this);
     };
 
     SwitchRadio.prototype.isActive = function() {
@@ -337,7 +341,7 @@ var __hasProp = {}.hasOwnProperty,
     SwitchRadio.prototype.updatePosition = function() {
       var value;
       value = ["translate3d(" + this.transform.translate.x + "px, 0, 0)"];
-      this.sFlex.style[transformProperty] = value.join(" ");
+      this.drag.style[transformProperty] = value.join(" ");
     };
 
     SwitchRadio.prototype.destroy = function() {
@@ -348,7 +352,7 @@ var __hasProp = {}.hasOwnProperty,
           radio = _ref[_i];
           radio.removeAttribute('data-side');
         }
-        this.sFlex.removeEventListener('keydown', this.eventCall.keydown);
+        this.drag.removeEventListener('keydown', this.eventCall.keydown);
         this.mk.destroy();
         this.mc.destroy();
         _ref1 = this.elements;
