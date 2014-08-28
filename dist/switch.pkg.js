@@ -2954,11 +2954,12 @@ var __hasProp = {}.hasOwnProperty,
   GUID = 0;
   instances = {};
   _SPL = {
+    getTemplate: function() {
+      return ['<div class="switchRadio__flex">', '<div class="switchRadio__caption switchRadio__caption--off">', '{captionOff}</div>', '<div class="switchRadio__knob"></div>', '<div class="switchRadio__caption switchRadio__caption--on">', '{captionOn}</div>', '</div>'].join('');
+    },
     onToggle: function() {
       var radio, _i, _len, _ref;
       this.toggle();
-      this.valor = this.valorUpdate();
-      this.eventToggleParam[0].value = this.valor;
       this.emitEvent('toggle', this.eventToggleParam);
       _ref = this.radios;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -2970,109 +2971,121 @@ var __hasProp = {}.hasOwnProperty,
     },
     onStart: function(event) {
       this.sFlex.focus();
+      classie.add(this.sFlex, 'is-dragging');
     },
     onMove: function(event) {
       var v;
-      if (this.side === null) {
-        v = -this.size / 2 + event.deltaX;
-      } else {
-        v = this.side ? -this.size + event.deltaX : event.deltaX;
+      v = -this.size / 2 + event.deltaX;
+      if (this.ligado !== null) {
+        v = this.ligado ? -this.size + event.deltaX : event.deltaX;
       }
       this.transform.translate.x = Math.min(0, Math.max(-this.size, v));
-      classie.add(this.sFlex, 'is-dragging');
-      this.active = true;
-      this.captionsActive();
-      this.requestUpdate();
+      this.updatePosition();
     },
     onEnd: function(event) {
-      this.side = Boolean(Math.abs(this.transform.translate.x) > (this.size / 2));
+      this.ligado = Math.abs(this.transform.translate.x) > (this.size / 2);
       classie.remove(this.sFlex, 'is-dragging');
-      _SPL.onToggle.bind(this)();
+      _SPL.onToggle.call(this);
     },
     onTap: function(event) {
       var center, rect;
-      if (this.side === null) {
-        rect = this.container.getBoundingClientRect();
-        center = rect.left + (rect.width / 2);
-        this.side = event.center.x < center;
-      } else {
-        this.side = !this.side;
-      }
-      _SPL.onToggle.bind(this)();
+      rect = this.container.getBoundingClientRect();
+      center = rect.left + (rect.width / 2);
+      this.ligado = event.center.x < center;
+      _SPL.onToggle.call(this);
     },
     onKeydown: function(event) {
+      var dispara;
+      dispara = false;
       switch (event.keyCode) {
         case this.keyCodes.space:
-          this.side = !this.side;
-          _SPL.onToggle.bind(this)();
+          this.ligado = !this.ligado;
+          dispara = true;
           break;
         case this.keyCodes.right:
-          this.side = false;
-          _SPL.onToggle.bind(this)();
+          this.ligado = false;
+          dispara = true;
           break;
         case this.keyCodes.left:
-          this.side = true;
-          _SPL.onToggle.bind(this)();
+          this.ligado = true;
+          dispara = true;
+      }
+      if (dispara) {
+        _SPL.onToggle.call(this);
       }
     },
-    getTemplate: function() {
-      return ['<div class="switchRadio__flex" ', 'tabindex="0" role="slider" ', 'aria-valuemin="{valuemin}" aria-valuemax="{valuemax}" ', 'aria-valuetext="{valuetext}" aria-valuenow="{valuenow}" ', 'aria-labeledby="{labeledby}" aria-required="{required}">', '<div class="switchRadio__caption switchRadio__caption--on">', '{captionOn}</div>', '<div class="switchRadio__knob"></div>', '<div class="switchRadio__caption switchRadio__caption--off">', '{captionOff}</div>', '</div>'].join('');
+    checked: function(radio) {
+      radio.setAttribute('checked', '');
+      radio.checked = true;
+    },
+    unchecked: function(radio) {
+      radio.removeAttribute('checked');
+      radio.checked = false;
     },
     build: function() {
-      var captionOff, captionOn, content, labels, mc, pan, r, sizes, tap;
+      var attrib, captionOff, captionOn, content, labels, pan, r, sizes, tap, value, _ref;
       captionOn = captionOff = '';
       labels = this.container.getElementsByTagName('label');
       if (labels.length === 2) {
-        captionOn = labels[0].textContent;
-        captionOff = labels[1].textContent;
+        captionOff = labels[0].textContent;
+        captionOn = labels[1].textContent;
       } else {
         console.warn('✖ No labels');
       }
       r = {
         'captionOn': captionOn,
-        'captionOff': captionOff,
-        'valuemax': this.aria['aria-valuemax'],
-        'valuemin': this.aria['aria-valuemin'],
-        'valuenow': this.aria['aria-valuenow'],
-        'labeledby': this.aria['aria-labeledby'],
-        'required': this.aria['aria-required']
+        'captionOff': captionOff
       };
       content = this.template.replace(/\{(.*?)\}/g, function(a, b) {
         return r[b];
       });
       this.container.insertAdjacentHTML('afterbegin', content);
+      this.elements = [];
+      sizes = this.getSizes();
+      this.size = Math.max(sizes.sOn, sizes.sOff);
       this.sFlex = this.container.querySelector('.switchRadio__flex');
       this.sOn = this.sFlex.querySelector('.switchRadio__caption--on');
       this.sOff = this.sFlex.querySelector('.switchRadio__caption--off');
       this.knob = this.sFlex.querySelector('.switchRadio__knob');
-      sizes = this.getSizes();
-      this.size = Math.max(sizes.sOn, sizes.sOff);
+      this.elements.push(this.sFlex);
       this.sOn.style.width = this.sOff.style.width = "" + this.size + "px";
       this.sFlex.style.width = (this.size * 2) + sizes.knob + 'px';
       this.container.style.width = this.size + sizes.knob + 'px';
-      pan = new Hammer.Pan({
-        direction: Hammer.DIRECTION_HORIZONTAL
-      });
+      _ref = this.aria;
+      for (attrib in _ref) {
+        value = _ref[attrib];
+        this.sFlex.setAttribute(attrib, value);
+      }
       tap = new Hammer.Tap;
-      mc = new Hammer.Manager(this.sFlex, {
+      this.mc = new Hammer.Manager(this.container, {
         dragLockToAxis: true,
         dragBlockHorizontal: true,
         preventDefault: true
       });
-      mc.add(tap);
-      mc.add(pan);
-      mc.on('tap', _SPL.onTap.bind(this));
-      mc.on('panstart', _SPL.onStart.bind(this));
-      mc.on('pan', _SPL.onMove.bind(this));
-      mc.on('panend', _SPL.onEnd.bind(this));
-      mc.on('pancancel', _SPL.onEnd.bind(this));
-      this.sFlex.addEventListener('keydown', _SPL.onKeydown.bind(this), false);
+      this.mc.add(tap);
+      this.mc.on('tap', _SPL.onTap.bind(this));
+      pan = new Hammer.Pan({
+        direction: Hammer.DIRECTION_HORIZONTAL
+      });
+      this.mk = new Hammer.Manager(this.sFlex, {
+        dragLockToAxis: true,
+        dragBlockHorizontal: true,
+        preventDefault: true
+      });
+      this.mk.add(pan);
+      this.mk.on('panstart', _SPL.onStart.bind(this));
+      this.mk.on('pan', _SPL.onMove.bind(this));
+      this.mk.on('panend', _SPL.onEnd.bind(this));
+      this.mk.on('pancancel', _SPL.onEnd.bind(this));
+      this.eventCall = {
+        'keydown': _SPL.onKeydown.bind(this)
+      };
+      this.sFlex.addEventListener('keydown', this.eventCall.keydown);
       this.eventToggleParam = [
         {
           'instance': this,
           'container': this.container,
           'radios': this.radios,
-          'handler': this.sFlex,
           'value': this.valor
         }
       ];
@@ -3106,7 +3119,7 @@ var __hasProp = {}.hasOwnProperty,
       required = required || false;
       if (_SPL.initCheck(container)) {
         console.warn('The component has been initialized.');
-        return null;
+        return;
       } else {
         id = ++GUID;
         this.container = container;
@@ -3126,81 +3139,81 @@ var __hasProp = {}.hasOwnProperty,
       }
       if (this.radios.length !== 2) {
         console.err('✖ No radios');
-        return null;
+        return;
       }
       this.template = _SPL.getTemplate();
       this.size = 0;
-      this.side = null;
+      this.ligado = null;
       if (this.radios[0].checked && !this.radios[1].checked) {
-        this.side = false;
+        this.ligado = false;
       }
       if (this.radios[1].checked && !this.radios[0].checked) {
-        this.side = true;
+        this.ligado = true;
       }
-      this.valor = this.valorUpdate();
+      this.valor = null;
+      this.updateValor();
       this.active = false;
-      this.ticking = false;
       this.transform = {
         translate: {
           x: 0
         }
-      };
-      this.aria = {
-        'aria-valuemax': this.radios[0].title,
-        'aria-valuemin': this.radios[1].title,
-        'aria-valuetext': null,
-        'aria-valuenow': null,
-        'aria-labeledby': labeledby,
-        'aria-required': required
       };
       this.keyCodes = {
         'space': 32,
         'left': 37,
         'right': 39
       };
+      this.aria = {
+        'tabindex': 0,
+        'role': 'slider',
+        'aria-valuemin': this.radios[0].title,
+        'aria-valuemax': this.radios[1].title,
+        'aria-valuetext': null,
+        'aria-valuenow': null,
+        'aria-labeledby': labeledby,
+        'aria-required': required
+      };
       _SPL.build.bind(this)();
     }
 
     SwitchRadio.prototype.toggle = function(v) {
-      var radio, _i, _len, _ref;
-      this.side = v !== void 0 ? v : this.side;
-      if (this.side !== null) {
+      var a, b, radio, _i, _len, _ref;
+      v = v || false;
+      if (v !== false) {
+        this.ligado = v;
+      }
+      if (this.ligado !== null) {
         this.active = true;
-        this.transform.translate.x = this.side ? -this.size : 0;
-        if (this.side) {
-          this.radios[0].removeAttribute('checked');
-          this.radios[0].checked = false;
-          this.radios[1].setAttribute('checked', '');
-          this.radios[1].checked = true;
-        } else {
-          this.radios[1].removeAttribute('checked');
-          this.radios[1].checked = false;
-          this.radios[0].setAttribute('checked', '');
-          this.radios[0].checked = true;
-        }
+        this.transform.translate.x = this.ligado ? -this.size : 0;
+        a = this.ligado ? 1 : 0;
+        b = a ^ 1;
+        _SPL.checked(this.radios[a]);
+        _SPL.unchecked(this.radios[b]);
       } else {
         this.active = false;
         this.transform.translate.x = -this.size / 2;
         _ref = this.radios;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           radio = _ref[_i];
-          radio.removeAttribute('checked');
-          radio.checked = false;
+          _SPL.unchecked(radio);
         }
       }
-      this.ariaAttr();
-      this.captionsActive();
-      this.requestUpdate();
+      this.isActive();
+      this.updateAria();
+      this.updateValor();
+      this.updatePosition();
     };
 
     SwitchRadio.prototype.swap = function(v) {
-      v = v !== void 0 ? v : null;
-      this.side = v !== null ? !v : !this.side;
+      if (v != null) {
+        this.ligado = v;
+      }
+      this.ligado = !this.ligado;
       _SPL.onToggle.bind(this)();
     };
 
     SwitchRadio.prototype.reset = function() {
-      this.side = null;
+      this.ligado = null;
       _SPL.onToggle.bind(this)();
     };
 
@@ -3226,56 +3239,60 @@ var __hasProp = {}.hasOwnProperty,
       return sizes;
     };
 
-    SwitchRadio.prototype.ariaAttr = function() {
-      var v;
-      if (this.side === null) {
-        v = this.side;
-      } else {
-        v = this.side ? this.radios[1].title : this.radios[0].title;
-      }
-      this.sFlex.setAttribute('aria-valuenow', v);
-      this.sFlex.setAttribute('aria-valuetext', v);
-    };
-
-    SwitchRadio.prototype.valorUpdate = function() {
-      var v;
-      if (this.side === null) {
-        v = this.side;
-      } else {
-        v = this.side ? this.radios[1].value : this.radios[0].value;
-      }
-      return v;
-    };
-
-    SwitchRadio.prototype.captionsActive = function() {
+    SwitchRadio.prototype.isActive = function() {
       var method;
       method = this.active ? 'add' : 'remove';
       classie[method](this.sOn, 'is-active');
       classie[method](this.sOff, 'is-active');
     };
 
-    SwitchRadio.prototype.updateTransform = function() {
-      var value;
-      value = ["translate3d(" + this.transform.translate.x + "px, 0, 0)"];
-      this.sFlex.style[transformProperty] = value.join(" ");
-      this.ticking = false;
-    };
-
-    SwitchRadio.prototype.requestUpdate = function() {
-      if (this.ticking === false) {
-        this.ticking = true;
-        requestAnimationFrame(this.updateTransform.bind(this));
+    SwitchRadio.prototype.updateAria = function() {
+      var v;
+      if (this.ligado !== null) {
+        v = this.ligado === true ? this.radios[1].title : this.radios[0].title;
+        this.container.setAttribute('aria-valuenow', v);
+        this.container.setAttribute('aria-valuetext', v);
       }
     };
 
+    SwitchRadio.prototype.updateValor = function() {
+      this.valor = null;
+      if (this.ligado !== null) {
+        this.valor = this.ligado === true ? this.radios[1].value : this.radios[0].value;
+      }
+      if (this.eventToggleParam != null) {
+        this.eventToggleParam[0].value = this.valor;
+      }
+    };
+
+    SwitchRadio.prototype.updatePosition = function() {
+      var value;
+      value = ["translate3d(" + this.transform.translate.x + "px, 0, 0)"];
+      this.sFlex.style[transformProperty] = value.join(" ");
+    };
+
     SwitchRadio.prototype.destroy = function() {
-      var style;
-      style = this.container.style;
-      style.width = '';
-      this.container.removeChild(this.sFlex);
-      this.container.removeAttribute("data-sr" + this.container.srGUID);
-      delete this.container.srGUID;
-      this.sFlex = null;
+      var el, radio, _i, _j, _len, _len1, _ref, _ref1;
+      if (this.container !== null) {
+        _ref = this.radios;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          radio = _ref[_i];
+          radio.removeAttribute('data-side');
+        }
+        this.sFlex.removeEventListener('keydown', this.eventCall.keydown);
+        this.mk.destroy();
+        this.mc.destroy();
+        _ref1 = this.elements;
+        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+          el = _ref1[_j];
+          this.container.removeChild(el);
+        }
+        this.container.removeAttribute("class");
+        this.container.removeAttribute("style");
+        this.container.removeAttribute("data-sr" + this.container.srGUID);
+        delete this.container.srGUID;
+        this.container = null;
+      }
     };
 
     return SwitchRadio;

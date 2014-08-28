@@ -53,14 +53,6 @@ html(lang='en')
                     console.log(obj.value);
                 });
 
-                [].forEach.call(el.querySelectorAll('input[type=radio]'), function(radio) {
-                    radio.addEventListener('change', function(event) {
-                        var r = event.currentTarget;
-                        var side = Boolean(parseInt(r.getAttribute('data-side'), 10))
-                        sr.toggle(side)
-                    }, false);
-                });
-
                 cacheSwitches.push(sr);
             });
 

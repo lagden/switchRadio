@@ -15,18 +15,19 @@ $times: 1
     box-sizing: content-box
     cursor: pointer
 
-    input[type="radio"],
-    label
+    > input[type="radio"],
+    > label
         z-index: 1
         visibility: hidden
         position: absolute
 
     > .switchRadio__flex
-        display: flex
-        flex-direction: row
-        flex-wrap: nowrap
         align-items: center
         align-content: center
+
+        display: flex
+        flex-flow: row nowrap
+        justify-content: center
 
         height: $height
         position: relative
@@ -67,3 +68,9 @@ $times: 1
             overflow: hidden
             border-radius: 50%
             background: linear-gradient(rgb(246, 248, 249) 0%, rgb(229, 235, 238) 50%, rgb(215, 222, 227) 51%, rgb(245, 247, 249) 100%)
+
+    > input[type="radio"],
+    > label
+        z-index: 1
+        visibility: hidden
+        position: absolute

@@ -35,12 +35,21 @@ It is a plugin that show `radios buttons` like slide switch
   instances = {}
 
   _SPL =
+    # Template
+    getTemplate: ->
+      [
+        '<div class="switchRadio__flex">'
+        '<div class="switchRadio__caption switchRadio__caption--off">'
+        '{captionOff}</div>'
+        '<div class="switchRadio__knob"></div>'
+        '<div class="switchRadio__caption switchRadio__caption--on">'
+        '{captionOn}</div>'
+        '</div>'
+      ].join ''
+
     # Event Handlers
     onToggle: ->
-
       @toggle()
-      @valor = @valorUpdate()
-      @eventToggleParam[0].value = @valor
       @.emitEvent 'toggle', @eventToggleParam
       for radio in @radios when radio.checked
         radio.dispatchEvent @eventChange
@@ -48,76 +57,68 @@ It is a plugin that show `radios buttons` like slide switch
 
     onStart: (event) ->
       @sFlex.focus()
+      classie.add @sFlex, 'is-dragging'
       return
 
     onMove: (event) ->
-      if @side == null
-        v = -@size/2 + event.deltaX
-      else
-        v = if @side then -@size + event.deltaX else event.deltaX
+      v = -@size/2 + event.deltaX
+
+      if @ligado isnt null
+        v = if @ligado then -@size + event.deltaX else event.deltaX
 
       @transform.translate.x = Math.min 0, Math.max -@size, v
-      classie.add @sFlex, 'is-dragging'
-      @active = true
-      @captionsActive()
-      @requestUpdate()
+      @updatePosition()
       return
 
     onEnd: (event) ->
-      @side = Boolean Math.abs(@transform.translate.x) > (@size / 2)
+      @ligado = Math.abs(@transform.translate.x) > (@size / 2)
       classie.remove @sFlex, 'is-dragging'
-      _SPL.onToggle.bind(@)()
+      _SPL.onToggle.call(@)
       return
 
     onTap: (event) ->
-      if @side == null
-        rect = @container.getBoundingClientRect()
-        center = rect.left + (rect.width / 2)
-        @side = event.center.x < center
-      else
-        @side = !@side
+      rect = @container.getBoundingClientRect()
+      center = rect.left + (rect.width / 2)
+      @ligado = event.center.x < center
 
-      _SPL.onToggle.bind(@)()
+      _SPL.onToggle.call(@)
       return
 
     onKeydown: (event) ->
+      dispara = false
       switch event.keyCode
         when @keyCodes.space
-          @side = !@side
-          _SPL.onToggle.bind(@)()
+          @ligado = !@ligado
+          dispara = true
 
         when @keyCodes.right
-          @side = false
-          _SPL.onToggle.bind(@)()
+          @ligado = false
+          dispara = true
 
         when @keyCodes.left
-          @side = true
-          _SPL.onToggle.bind(@)()
+          @ligado = true
+          dispara = true
+
+      _SPL.onToggle.call(@) if dispara
       return
 
-    # Template
-    getTemplate: ->
-      [
-        '<div class="switchRadio__flex" '
-        'tabindex="0" role="slider" '
-        'aria-valuemin="{valuemin}" aria-valuemax="{valuemax}" '
-        'aria-valuetext="{valuetext}" aria-valuenow="{valuenow}" '
-        'aria-labeledby="{labeledby}" aria-required="{required}">'
-        '<div class="switchRadio__caption switchRadio__caption--on">'
-        '{captionOn}</div>'
-        '<div class="switchRadio__knob"></div>'
-        '<div class="switchRadio__caption switchRadio__caption--off">'
-        '{captionOff}</div>'
-        '</div>'
-      ].join ''
+    checked: (radio) ->
+      radio.setAttribute 'checked', ''
+      radio.checked = true
+      return
+
+    unchecked: (radio) ->
+      radio.removeAttribute 'checked'
+      radio.checked = false
+      return
 
     build: () ->
       captionOn = captionOff = ''
 
       labels = @container.getElementsByTagName 'label'
       if labels.length == 2
-        captionOn  = labels[0].textContent
-        captionOff = labels[1].textContent
+        captionOff  = labels[0].textContent
+        captionOn   = labels[1].textContent
       else
         console.warn '✖ No labels'
 
@@ -125,57 +126,69 @@ It is a plugin that show `radios buttons` like slide switch
       r =
         'captionOn'  : captionOn
         'captionOff' : captionOff
-        'valuemax'    : @aria['aria-valuemax']
-        'valuemin'   : @aria['aria-valuemin']
-        'valuenow'   : @aria['aria-valuenow']
-        'labeledby'  : @aria['aria-labeledby']
-        'required'   : @aria['aria-required']
 
       content = @template.replace /\{(.*?)\}/g, (a, b) ->
         return r[b]
 
       @container.insertAdjacentHTML 'afterbegin', content
 
-      # Size elements
+      # Elements and Size elements
+      @elements = []
+
+      sizes = @getSizes()
+      @size = Math.max sizes.sOn, sizes.sOff
+
       @sFlex = @container.querySelector '.switchRadio__flex'
       @sOn   = @sFlex.querySelector '.switchRadio__caption--on'
       @sOff  = @sFlex.querySelector '.switchRadio__caption--off'
       @knob  = @sFlex.querySelector '.switchRadio__knob'
 
-      sizes = @getSizes()
+      @elements.push @sFlex
 
-      @size = Math.max sizes.sOn, sizes.sOff
-
+      # Width
       @sOn.style.width       = @sOff.style.width = "#{@size}px"
       @sFlex.style.width     = (@size * 2) + sizes.knob + 'px'
       @container.style.width = @size + sizes.knob + 'px'
 
-      # Drag
-      pan = new Hammer.Pan direction: Hammer.DIRECTION_HORIZONTAL
-      tap = new Hammer.Tap
+      # Aria
+      @sFlex.setAttribute attrib, value for attrib, value of @aria
 
-      mc = new Hammer.Manager @sFlex,
+      # Drag and Tap
+      #
+      # Container
+      tap = new Hammer.Tap
+      @mc = new Hammer.Manager @container,
         dragLockToAxis: true
         dragBlockHorizontal: true
         preventDefault: true
 
-      mc.add tap
-      mc.add pan
-      mc.on 'tap'       , _SPL.onTap.bind(@)
-      mc.on 'panstart'  , _SPL.onStart.bind(@)
-      mc.on 'pan'       , _SPL.onMove.bind(@)
-      mc.on 'panend'    , _SPL.onEnd.bind(@)
-      mc.on 'pancancel' , _SPL.onEnd.bind(@)
+      @mc.add tap
+      @mc.on 'tap'       , _SPL.onTap.bind(@)
+
+      # Flex
+      pan = new Hammer.Pan direction: Hammer.DIRECTION_HORIZONTAL
+      @mk = new Hammer.Manager @sFlex,
+        dragLockToAxis: true
+        dragBlockHorizontal: true
+        preventDefault: true
+
+      @mk.add pan
+      @mk.on 'panstart'  , _SPL.onStart.bind(@)
+      @mk.on 'pan'       , _SPL.onMove.bind(@)
+      @mk.on 'panend'    , _SPL.onEnd.bind(@)
+      @mk.on 'pancancel' , _SPL.onEnd.bind(@)
 
       # Keyboard
-      @sFlex.addEventListener 'keydown', _SPL.onKeydown.bind(@), false
+      @eventCall =
+        'keydown': _SPL.onKeydown.bind(@)
+
+      @sFlex.addEventListener 'keydown', @eventCall.keydown
 
       # Event toggle param
       @eventToggleParam = [
         'instance' : @
         'container': @container
         'radios'   : @radios
-        'handler'  : @sFlex
         'value'    : @valor
       ]
 
@@ -205,7 +218,7 @@ It is a plugin that show `radios buttons` like slide switch
       # Check if component was initialized
       if _SPL.initCheck container
         console.warn 'The component has been initialized.'
-        return null
+        return
       else
         id = ++GUID
         # Container
@@ -223,79 +236,83 @@ It is a plugin that show `radios buttons` like slide switch
 
       if @radios.length != 2
         console.err '✖ No radios'
-        return null
+        return
 
+      # Template
       @template = _SPL.getTemplate()
+
+      # Largura
       @size = 0
 
-      @side = null
-      @side = false if @radios[0].checked and !@radios[1].checked
-      @side = true  if @radios[1].checked and !@radios[0].checked
+      # Ligado, desligado ou nulo
+      @ligado = null
+      @ligado = false if @radios[0].checked and !@radios[1].checked
+      @ligado = true  if @radios[1].checked and !@radios[0].checked
 
-      @valor = @valorUpdate()
+      # Valor Inicial
+      @valor = null
+      @updateValor()
 
+      # Knob ativado
       @active = false
 
       # Animation
-      @ticking = false
       @transform =
         translate:
           x: 0
 
-      @aria =
-        'aria-valuemax'  : @radios[0].title
-        'aria-valuemin'  : @radios[1].title
-        'aria-valuetext' : null
-        'aria-valuenow'  : null
-        'aria-labeledby' : labeledby
-        'aria-required'  : required
-
+      # Keyboard
       @keyCodes =
         'space' : 32
         'left'  : 37
         'right' : 39
 
+      # Acessibilidade
+      @aria =
+        'tabindex'       : 0
+        'role'           : 'slider'
+        'aria-valuemin'  : @radios[0].title
+        'aria-valuemax'  : @radios[1].title
+        'aria-valuetext' : null
+        'aria-valuenow'  : null
+        'aria-labeledby' : labeledby
+        'aria-required'  : required
+
       _SPL.build.bind(@)()
 
     toggle: (v) ->
+      v = v || false
+      @ligado = v unless v is no
 
-      @side = if v isnt undefined then v else @side
-
-      if @side isnt null
+      if @ligado isnt null
         @active = true
-        @transform.translate.x = if @side then -@size else 0
+        @transform.translate.x = if @ligado then -@size else 0
 
-        if @side
-          @radios[0].removeAttribute 'checked'
-          @radios[0].checked = false
-          @radios[1].setAttribute 'checked', ''
-          @radios[1].checked = true
-        else
-          @radios[1].removeAttribute 'checked'
-          @radios[1].checked = false
-          @radios[0].setAttribute 'checked', ''
-          @radios[0].checked = true
+        a = if @ligado then 1 else 0
+        b = a^1
+
+        _SPL.checked(@radios[a])
+        _SPL.unchecked(@radios[b])
 
       else
         @active = false
         @transform.translate.x = -@size / 2
-        for radio in @radios
-          radio.removeAttribute 'checked'
-          radio.checked = false
+        _SPL.unchecked(radio) for radio in @radios
 
-      @ariaAttr()
-      @captionsActive()
-      @requestUpdate()
+      @isActive()
+      @updateAria()
+      @updateValor()
+      @updatePosition()
       return
 
     swap: (v) ->
-      v = if v isnt undefined then v else null
-      @side = if v isnt null then !v else !@side
+      @ligado = v if v?
+      @ligado = !@ligado
       _SPL.onToggle.bind(@)()
       return
 
     reset: ->
-      @side = null
+      @ligado = null
       _SPL.onToggle.bind(@)()
       return
 
@@ -303,11 +320,13 @@ It is a plugin that show `radios buttons` like slide switch
       clone = @container.cloneNode true
       clone.style.visibility = 'hidden'
       clone.style.position   = 'absolute'
+
       document.body.appendChild clone
 
       sOnSelector  = '.switchRadio__flex > .switchRadio__caption--on'
       sOffSelector = '.switchRadio__flex > .switchRadio__caption--off'
       knobSelector = '.switchRadio__flex > .switchRadio__knob'
+
       sOn  = clone.querySelector sOnSelector
       sOff = clone.querySelector sOffSelector
       knob = clone.querySelector knobSelector
@@ -321,47 +340,57 @@ It is a plugin that show `radios buttons` like slide switch
       clone = null
       return sizes
 
-    ariaAttr: ->
-      if @side == null
-        v = @side
-      else
-        v = if @side then @radios[1].title else @radios[0].title
-      @sFlex.setAttribute 'aria-valuenow', v
-      @sFlex.setAttribute 'aria-valuetext', v
-      return
-
-    valorUpdate: ->
-      if @side == null
-        v = @side
-      else
-        v = if @side then @radios[1].value else @radios[0].value
-      return v
-
-    captionsActive: ->
+    isActive: ->
       method = if @active then 'add' else 'remove'
       classie[method] @sOn, 'is-active'
       classie[method] @sOff, 'is-active'
       return
 
-    updateTransform: ->
-      value = ["translate3d(#{@transform.translate.x}px, 0, 0)"]
-      @sFlex.style[transformProperty] = value.join " "
-      @ticking = false
+    updateAria: ->
+      if @ligado isnt null
+        v = if @ligado is on then @radios[1].title else @radios[0].title
+        @container.setAttribute 'aria-valuenow', v
+        @container.setAttribute 'aria-valuetext', v
       return
 
-    requestUpdate: ->
-      if @ticking == false
-        @ticking = true
-        requestAnimationFrame @updateTransform.bind(@)
+    updateValor: ->
+      @valor = null
+      if @ligado isnt null
+        @valor = if @ligado is on then @radios[1].value else @radios[0].value
+
+      if @eventToggleParam?
+        @eventToggleParam[0].value = @valor
+      return
+
+    updatePosition: ->
+      value = ["translate3d(#{@transform.translate.x}px, 0, 0)"]
+      @sFlex.style[transformProperty] = value.join " "
       return
 
     destroy: ->
-      style = @container.style
-      style.width = ''
-      @container.removeChild @sFlex
-      @container.removeAttribute "data-sr#{@container.srGUID}"
-      delete @container.srGUID
-      @sFlex = null
+      if @container isnt null
+        # Remove attributes from radios
+        radio.removeAttribute 'data-side' for radio in @radios
+
+        # Remove Event from @container
+        @sFlex.removeEventListener 'keydown', @eventCall.keydown
+
+        # Destroy Hammer Events
+        @mk.destroy()
+        @mc.destroy()
+
+        # Remove @elements from @container
+        @container.removeChild el for el in @elements
+
+        # Remove attributes from @container
+        @container.removeAttribute "class"
+        @container.removeAttribute "style"
+        @container.removeAttribute "data-sr#{@container.srGUID}"
+
+        # Remove reference
+        delete @container.srGUID
+
+        @container = null
       return
 
   # https://github.com/metafizzy/outlayer/blob/master/outlayer.js#L887
