@@ -73,7 +73,26 @@ It is a plugin that show `radios buttons` like slide switch
 
     # Event Handlers
     onToggle: ->
-      @toggle()
+      if @ligado isnt null
+        @active = true
+        @transform.translate.x = if @ligado then -@size else 0
+
+        a = if @ligado then 1 else 0
+        b = a^1
+
+        _SPL.checked(@radios[a])
+        _SPL.unchecked(@radios[b])
+
+      else
+        @active = false
+        @transform.translate.x = -@size / 2
+        _SPL.unchecked(radio) for radio in @radios
+
+      @isActive()
+      @updateAria()
+      @updateValor()
+      @updatePosition()
+
       @.emitEvent 'toggle', @eventToggleParam
       for radio in @radios when radio.checked
         radio.dispatchEvent @eventChange
@@ -305,35 +324,10 @@ It is a plugin that show `radios buttons` like slide switch
       @eventChange = new CustomEvent 'change'
 
       _SPL.build.call(@)
-
-    toggle: (v) ->
-      v = v || false
-      @ligado = v unless v is no
-
-      if @ligado isnt null
-        @active = true
-        @transform.translate.x = if @ligado then -@size else 0
-
-        a = if @ligado then 1 else 0
-        b = a^1
-
-        _SPL.checked(@radios[a])
-        _SPL.unchecked(@radios[b])
-
-      else
-        @active = false
-        @transform.translate.x = -@size / 2
-        _SPL.unchecked(radio) for radio in @radios
-
-      @isActive()
-      @updateAria()
-      @updateValor()
-      @updatePosition()
       return
 
     swap: (v) ->
-      @ligado = v if v?
-      @ligado = !@ligado
+      @ligado = if v? then v else !@ligado
       _SPL.onToggle.call(@)
       return
 
